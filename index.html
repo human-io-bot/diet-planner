@@ -53,6 +53,8 @@ const SKIP_REASONS=["Not hungry","Nausea (Zepbound)","Fasting","Running late","A
 
 const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 
+// In-memory cache with 5 min TTL
+const CACHE={_d:{},set(k,v){this._d[k]={v,t:Date.now()}},get(k){const e=this._d[k];if(!e)return null;if(Date.now()-e.t>300000){delete this._d[k];return null}return e.v},clear(prefix){Object.keys(this._d).forEach(k=>{if(k.startsWith(prefix))delete this._d[k]})}};
 function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 
 function parseTime(v){
@@ -149,11 +151,36 @@ function App(){
     (async()=>{
       setLoading(true);
       try{
+        // Check if menu is cached in localStorage (survives reload)
+        const cachedMenu=LS.get("dp_menu");
+        const cachedWo=LS.get("dp_workouts");
+        const cachedSettings=LS.get("dp_settings");
+        const cacheAge=Number(LS.get("dp_cache_time"))||0;
+        const isFresh=Date.now()-cacheAge<3600000; // 1 hour cache
+
+        if(isFresh&&cachedMenu&&cachedWo&&cachedSettings){
+          setMenu(JSON.parse(cachedMenu));
+          setWorkouts(JSON.parse(cachedWo));
+          setSettings(JSON.parse(cachedSettings));
+          setLoading(false);
+          // Refresh in background silently
+          api("getMenu").then(m=>{if(m.menu){setMenu(m.menu);LS.set("dp_menu",JSON.stringify(m.menu))}});
+          api("getWorkouts").then(w=>{if(w.workouts){setWorkouts(w.workouts);LS.set("dp_workouts",JSON.stringify(w.workouts))}});
+          return;
+        }
+
         const[m,w,s]=await Promise.all([api("getMenu"),api("getWorkouts"),api("getSettings")]);
-        if(m.menu)setMenu(m.menu);
-        if(w.workouts)setWorkouts(w.workouts);
-        if(s.settings)setSettings(s.settings);
-      }catch(e){}
+        if(m.menu){setMenu(m.menu);LS.set("dp_menu",JSON.stringify(m.menu))}
+        if(w.workouts){setWorkouts(w.workouts);LS.set("dp_workouts",JSON.stringify(w.workouts))}
+        if(s.settings){setSettings(s.settings);LS.set("dp_settings",JSON.stringify(s.settings))}
+        LS.set("dp_cache_time",String(Date.now()));
+      }catch(e){
+        // Fallback to cached data even if stale
+        const cm=LS.get("dp_menu"),cw=LS.get("dp_workouts"),cs=LS.get("dp_settings");
+        if(cm)setMenu(JSON.parse(cm));
+        if(cw)setWorkouts(JSON.parse(cw));
+        if(cs)setSettings(JSON.parse(cs));
+      }
       setLoading(false);
     })();
   },[screen]);
@@ -183,18 +210,25 @@ function App(){
   useEffect(()=>{
     if(tab!=="week"||screen!=="app")return;
     (async()=>{
+      const mon=getMonday(selDate);
+      const ck="week-"+mon;
+      const cached=CACHE.get(ck);
+      if(cached){setWeekData(cached);return}
       setLoading(true);
-      const mon=getMonday(selDate);const res=[];
-      for(let i=0;i<7;i++){
-        const d=addDays(mon,i);
-        try{
-          const[ml,wl]=await Promise.all([api("getDailyLog",{date:d}),api("getWorkoutLog",{date:d})]);
-          let cal=0,p=0,sk=0;
-          (ml.meals||[]).forEach(m=>{if(m.skipped==="TRUE")sk++;else{cal+=Number(m.cal)||0;p+=Number(m.protein)||0}});
-          res.push({date:d,day:DAY_LABELS[dayOfWeek(d)],cal,p,skip:sk,burn:wl.workout?Number(wl.workout.burn)||0:0,woName:wl.workout?wl.workout.name:"--"});
-        }catch(e){res.push({date:d,day:DAY_LABELS[dayOfWeek(d)],cal:0,p:0,skip:0,burn:0,woName:"--"})}
-      }
-      setWeekData(res);setLoading(false);
+      try{
+        // Single API call for entire week
+        const r=await api("getWeekFull",{weekStart:mon});
+        if(r.success&&r.days){
+          const results=r.days.map(d=>({
+            date:d.date,day:d.day,cal:d.totalCal,p:d.totalProtein,
+            skip:d.skippedCount,burn:d.workoutBurn,
+            woName:d.workout?d.workout.name:"--"
+          }));
+          CACHE.set(ck,results);
+          setWeekData(results);
+        }
+      }catch(e){console.error(e)}
+      setLoading(false);
     })();
   },[tab,selDate,screen]);
 
@@ -208,7 +242,7 @@ function App(){
       const meals=SLOTS.filter(s=>dayMeals[s]).map(s=>{const m=dayMeals[s];return{slot:s,foodId:m.id||"skip",foodName:m.name,desc:m.desc||"",cal:m.cal||0,protein:m.p||0,carbs:m.c||0,fat:m.f||0,skipped:!!m.isSkip,skipReason:m.skipReason||skipReasons2[s]||""}});
       const payload={action:"logFullDay",date:selDate,meals,workout:dayWorkout?{workoutId:dayWorkout.id,workoutName:dayWorkout.name,duration:dayWorkout.dur,burn:dayWorkout.burn,intensity:dayWorkout.intensity}:null};
       const r=await apiPost(payload);
-      setMsg(r.success?"\u2705 Day saved!":"\u274C Error: "+(r.error||"Unknown"));
+      if(r.success){setMsg("\u2705 Day saved!");CACHE.clear("day-");CACHE.clear("week-")};
     }catch(e){setMsg("\u274C Save failed")}
     setSaving(false);setTimeout(()=>setMsg(""),3000);
   };
