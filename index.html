@@ -45,6 +45,36 @@ const SKIP_REASONS=["Not hungry","Nausea (Zepbound)","Fasting","Running late","A
 const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 
 function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+
+function parseTime(v){
+  if(!v)return"";
+  const s=String(v);
+  // Already formatted like "6:30 AM"
+  if(/^\d{1,2}:\d{2}\s*(AM|PM)$/i.test(s.trim()))return s.trim();
+  // Google Sheets date-time format like 1899-12-30T12:30:00.000Z
+  // Use browser local time to auto-adjust timezone
+  if(s.includes("T")&&s.includes(":")){
+    try{
+      const d=new Date(s);
+      let h=d.getHours();
+      let m=d.getMinutes();
+      const ap=h>=12?"PM":"AM";
+      h=h%12||12;
+      return h+":"+String(m).padStart(2,"0")+" "+ap;
+    }catch(e){return s}
+  }
+  // Plain number (hours as decimal from Sheets, e.g. 0.2708333 = 6:30 AM)
+  const num=parseFloat(s);
+  if(!isNaN(num)&&num>0&&num<1){
+    const totalMin=Math.round(num*24*60);
+    let h=Math.floor(totalMin/60);
+    const m=totalMin%60;
+    const ap=h>=12?"PM":"AM";
+    h=h%12||12;
+    return h+":"+String(m).padStart(2,"0")+" "+ap;
+  }
+  return s;
+}
 function dayOfWeek(ds){return new Date(ds+"T12:00:00").getDay()}
 function addDays(ds,n){const d=new Date(ds+"T12:00:00");d.setDate(d.getDate()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function getMonday(ds){const d=new Date(ds+"T12:00:00");const day=d.getDay();const diff=d.getDate()-day+(day===0?-6:1);d.setDate(diff);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
@@ -227,7 +257,7 @@ function App(){
     h("div",{style:{maxWidth:600,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center"}},
       h("div",null,
         h("h1",{style:{margin:0,fontSize:18,fontWeight:800}},"\u{1F37D}\uFE0F Diet + Workout"),
-        h("p",{style:{margin:"2px 0 0",fontSize:11,opacity:0.8}},"Target: "+calT+" kcal | Levo "+(settings.levoTime||"6:30 AM"))
+        h("p",{style:{margin:"2px 0 0",fontSize:11,opacity:0.8}},"Target: "+calT+" kcal | Levo "+parseTime(settings.levoTime||"6:30 AM"))
       ),
       h("button",{onClick:()=>{LS.set("dp_url","");LS.set("dp_key","");setScreen("setup")},style:{background:"rgba(255,255,255,0.15)",border:"none",color:"#fff",padding:"6px 12px",borderRadius:8,fontSize:11,cursor:"pointer"}},"Logout")
     )
@@ -285,7 +315,7 @@ function App(){
   const levo=h("div",{style:{background:"#fff",borderRadius:12,padding:"10px 14px",marginBottom:6,display:"flex",alignItems:"center",gap:10,border:"1px solid #e2e8f0"}},
     h("span",{style:{fontSize:20}},"\u{1F48A}"),
     h("div",{style:{flex:1}},
-      h("div",{style:{fontSize:12,fontWeight:700}},"Levothyroxine - "+(settings.levoTime||"6:30 AM")),
+      h("div",{style:{fontSize:12,fontWeight:700}},"Levothyroxine - "+parseTime(settings.levoTime||"6:30 AM")),
       h("div",{style:{fontSize:11,color:"#64748b"}},"Empty stomach + warm water. No food/coffee 60 min.")
     )
   );
@@ -408,7 +438,7 @@ function App(){
 
   const noEat=h("div",{style:{background:"#1e293b",borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",gap:8}},
     h("span",{style:{fontSize:16}},"\u{1F319}"),
-    h("span",{style:{color:"#fff",fontSize:12,fontWeight:600}},"No eating after "+(settings.noEatAfter||"8:30 PM"))
+    h("span",{style:{color:"#fff",fontSize:12,fontWeight:600}},"No eating after "+parseTime(settings.noEatAfter||"8:30 PM"))
   );
 
   const skipWarn=skCount>=3?h("div",{style:{background:"#fef2f2",borderRadius:10,padding:"10px 14px",border:"1px solid #fca5a5",marginBottom:12,fontSize:12,color:"#dc2626",fontWeight:600}},"\u26A0\uFE0F "+skCount+" meals skipped. Try to eat at least 3 meals on Zepbound."):null;
