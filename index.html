@@ -200,14 +200,20 @@ function App(){
         const isFresh=Date.now()-cacheAge<3600000&&cacheVer==="3"; // v3 = coffee from sheet
 
         if(isFresh&&cachedMenu&&cachedWo&&cachedSettings){
-          setMenu(JSON.parse(cachedMenu));
-          setWorkouts(JSON.parse(cachedWo));
-          setSettings(JSON.parse(cachedSettings));
-          setLoading(false);
-          // Refresh in background silently
-          api("getMenu").then(m=>{if(m.menu){const mapped=mapMenu(m.menu);setMenu(mapped);LS.set("dp_menu",JSON.stringify(mapped))}});
-          api("getWorkouts").then(w=>{if(w.workouts){setWorkouts(w.workouts);LS.set("dp_workouts",JSON.stringify(w.workouts))}});
-          return;
+          try{
+            const pm=JSON.parse(cachedMenu);
+            const pw=JSON.parse(cachedWo);
+            const ps=JSON.parse(cachedSettings);
+            // Validate mapped menu has expected keys
+            if(pm&&(pm.cf||pm.bf||pm.lu)){
+              setMenu(pm);setWorkouts(pw);setSettings(ps);
+              setLoading(false);
+              // Refresh in background silently
+              api("getMenu").then(m=>{if(m.menu){const mapped=mapMenu(m.menu);setMenu(mapped);LS.set("dp_menu",JSON.stringify(mapped))}}).catch(()=>{});
+              api("getWorkouts").then(w=>{if(w.workouts){setWorkouts(w.workouts);LS.set("dp_workouts",JSON.stringify(w.workouts))}}).catch(()=>{});
+              return;
+            }
+          }catch(ex){/* cache corrupted, fall through to fresh load */}
         }
 
         const[m,w,s]=await Promise.all([api("getMenu"),api("getWorkouts"),api("getSettings")]);
@@ -436,11 +442,15 @@ function App(){
     const chosen=dayMeals[slot];
     const isCoffee=slot==="cf"||slot==="cf2";
     const isProtein=slot==="lp"||slot==="dp";
-    // All items now come from the mapped menu (including coffee)
-    const rawItems=isProtein?(menu[slot]||[]).map(it=>it.cal===0?{...it,isVeg:true}:it):(menu[slot]||[]);
-    // Coffee and protein don't need extra SKIP option (coffee has "Skip Coffee", protein has "No Protein" in sheet)
+    // All items from mapped menu — safe fallback to empty array
+    const slotItems=menu[slot]||[];
+    const rawItems=isProtein?slotItems.map(it=>it.cal===0?Object.assign({},it,{isVeg:true}):it):slotItems;
+    // Coffee and protein have their own skip/no-protein in sheet, others get SKIP appended
     const items=(isCoffee||isProtein)?rawItems:[...rawItems,SKIP];
     const isOpen=openSlot===slot;
+
+    // Don't render if no items loaded yet for this slot
+    if(items.length===0&&!isCoffee)return null;
     return h("div",{key:slot,style:{marginBottom:6},className:"fade-in"},
       isCoffee&&!isOpen?h("div",{onClick:()=>setOpenSlot(isOpen?null:slot),style:{background:chosen&&chosen.cal>0?"#fffbeb":"#fff",borderRadius:12,padding:"10px 14px",border:chosen&&chosen.cal>0?"1px solid #fde68a":"1px solid #e2e8f0",cursor:"pointer"}},
         h("div",{style:{display:"flex",alignItems:"center",gap:8}},
@@ -698,7 +708,7 @@ function App(){
 
   // Main content
   const content=h("div",{style:{maxWidth:600,margin:"0 auto",padding:"12px 16px"}},
-    tab==="today"?h("div",null,dateNav,dayLoading?h("div",{style:{textAlign:"center",padding:40}},h("div",{style:{fontSize:32}},"\u{1F37D}\uFE0F"),h("div",{style:{color:"#64748b",fontSize:13,marginTop:8}},"Loading day...")):h("div",null,stats,calBar,levo,...mealCards,woCard,noEat,skipWarn,saveBtn)):
+    tab==="today"?h("div",null,dateNav,dayLoading?h("div",{style:{textAlign:"center",padding:40}},h("div",{style:{fontSize:32}},"\u{1F37D}\uFE0F"),h("div",{style:{color:"#64748b",fontSize:13,marginTop:8}},"Loading day...")):h("div",null,stats,calBar,levo,...mealCards.filter(Boolean),woCard,noEat,skipWarn,saveBtn)):
     tab==="week"?weekTab:
     tab==="weight"?weightTab:
     settingsTab
@@ -708,6 +718,12 @@ function App(){
 }
 
 ReactDOM.render(h(App),document.getElementById("root"));
+
+// Global error handler — shows error instead of blank page
+window.onerror=function(msg,src,line,col,err){
+  var el=document.getElementById("root");
+  if(el)el.innerHTML='<div style="padding:20px;font-family:monospace;font-size:13px;color:#dc2626;background:#fef2f2;margin:20px;border-radius:12px;border:1px solid #fca5a5"><h3 style="margin:0 0 8px">Something went wrong</h3><p style="margin:0 0 8px">'+msg+'</p><p style="margin:0;color:#64748b">Line: '+line+' Col: '+col+'</p><p style="margin:8px 0 0;color:#475569;font-size:12px">Try: Settings > Safari > Clear History and Website Data, then reload.</p></div>';
+};
 
 // Register Service Worker
 if("serviceWorker" in navigator){
