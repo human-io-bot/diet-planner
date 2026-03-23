@@ -66,10 +66,19 @@ const DAY_LABELS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","S
 const SKIP={id:"skip",name:"Skip / NA",desc:"Skipping this meal",cal:0,p:0,c:0,f:0,isSkip:true};
 const SKIP_REASONS=["Not hungry","Nausea (Zepbound)","Fasting","Running late","Ate out","Other"];
 
-const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const LS={
+  get(k){try{return localStorage.getItem(k)}catch(e){return null}},
+  set(k,v){try{localStorage.setItem(k,v)}catch(e){}},
+  // Basic encode/decode for sensitive values (not encryption, but prevents casual reading)
+  getSecure(k){try{const v=localStorage.getItem(k);if(!v)return null;return atob(v)}catch(e){return null}},
+  setSecure(k,v){try{localStorage.setItem(k,btoa(v))}catch(e){}}
+};
+// In-memory cache — past days cached forever (won't change), today 2 min
+const CACHE={_d:{},set(k,v,isPast){this._d[k]={v,t:Date.now(),ttl:isPast?86400000:120000}},get(k){const e=this._d[k];if(!e)return null;if(Date.now()-e.t>e.ttl){delete this._d[k];return null}return e.v},clear(prefix){Object.keys(this._d).forEach(k=>{if(k.startsWith(prefix))delete this._d[k]})},has(k){return!!this.get(k)}};
 
-// In-memory cache with 5 min TTL
-const CACHE={_d:{},set(k,v){this._d[k]={v,t:Date.now()}},get(k){const e=this._d[k];if(!e)return null;if(Date.now()-e.t>300000){delete this._d[k];return null}return e.v},clear(prefix){Object.keys(this._d).forEach(k=>{if(k.startsWith(prefix))delete this._d[k]})}};
+// Prefetch tracking
+let prefetchedWeek=null;
+let prefetchInFlight=null;
 function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 
 function parseTime(v){
@@ -126,24 +135,41 @@ function App(){
   const[weightHist,setWeightHist]=useState([]);
   const[weekData,setWeekData]=useState([]);
   const[loading,setLoading]=useState(false);
+  const[dayLoading,setDayLoading]=useState(false);
   const[err,setErr]=useState("");
   const[step,setStep]=useState(1);
 
   useEffect(()=>{
-    const u=LS.get("dp_url"),k=LS.get("dp_key");
+    const u=LS.get("dp_url");
+    let k=LS.getSecure("dp_key");
+    // Migration: if secure read fails, try plain text (old format) and re-save securely
+    if(!k){
+      const plain=LS.get("dp_key");
+      if(plain&&plain.length>0){k=plain;LS.setSecure("dp_key",plain)}
+    }
     if(u&&k){setApiUrl(u);setApiKey(k);setScreen("app")}
     else setScreen("setup");
   },[]);
 
   const saveConfig=async()=>{
     if(!apiUrl.trim()||!apiKey.trim()){setErr("Both fields are required");return}
+    // Validate URL is a Google Apps Script endpoint
+    const trimUrl=apiUrl.trim();
+    if(!trimUrl.startsWith("https://script.google.com/")){setErr("URL must start with https://script.google.com/");return}
+    if(!trimUrl.includes("/exec")){setErr("URL must end with /exec");return}
     setLoading(true);setErr("");
+    // Sanitize inputs
+    const cleanUrl=trimUrl.replace(/[<>"']/g,"");
+    const cleanKey=apiKey.trim().replace(/[<>"']/g,"");
+    if(cleanKey.length<4){setErr("API key too short (min 4 characters)");setLoading(false);return}
     try{
-      const r=await fetch(apiUrl.trim()+"?action=getSettings&key="+encodeURIComponent(apiKey.trim()));
+      const r=await fetch(cleanUrl+"?action=getSettings&key="+encodeURIComponent(cleanKey));
       const d=await r.json();
       if(d.error){setErr("Connection failed: "+d.error);setLoading(false);return}
-      LS.set("dp_url",apiUrl.trim());
-      LS.set("dp_key",apiKey.trim());
+      LS.set("dp_url",cleanUrl);
+      LS.setSecure("dp_key",cleanKey);
+      setApiUrl(cleanUrl);
+      setApiKey(cleanKey);
       setSettings(d.settings||{});
       setScreen("app");
     }catch(e){setErr("Cannot connect. Check URL and try again.")}
@@ -224,23 +250,39 @@ function App(){
 
   useEffect(()=>{
     if(tab!=="week"||screen!=="app")return;
+    const mon=getMonday(selDate);
+    const ck="week-"+mon;
+    const cached=CACHE.get(ck);
+    if(cached){setWeekData(cached);return}
+
+    // Try to build from day cache first (if we already prefetched)
+    let allCached=true;
+    const results=[];
+    for(let i=0;i<7;i++){
+      const d=addDays(mon,i);
+      const dc=CACHE.get("day-"+d);
+      if(dc){
+        let cal=0,p=0,sk=0;
+        (dc.meals||[]).forEach(m=>{
+          if(m.skipped&&m.skipped.toString().toUpperCase()==="TRUE")sk++;
+          else{cal+=Number(m.cal)||0;p+=Number(m.protein)||0}
+        });
+        results.push({date:d,day:DAY_LABELS[dayOfWeek(d)],cal,p,skip:sk,burn:dc.workout?Number(dc.workout.burn)||0:0,woName:dc.workout?dc.workout.name:"--"});
+      }else{allCached=false;break}
+    }
+    if(allCached){CACHE.set(ck,results,mon<getMonday(todayStr()));setWeekData(results);return}
+
+    // Fallback: single API call
+    setLoading(true);
     (async()=>{
-      const mon=getMonday(selDate);
-      const ck="week-"+mon;
-      const cached=CACHE.get(ck);
-      if(cached){setWeekData(cached);return}
-      setLoading(true);
       try{
-        // Single API call for entire week
         const r=await api("getWeekFull",{weekStart:mon});
         if(r.success&&r.days){
-          const results=r.days.map(d=>({
-            date:d.date,day:d.day,cal:d.totalCal,p:d.totalProtein,
-            skip:d.skippedCount,burn:d.workoutBurn,
-            woName:d.workout?d.workout.name:"--"
-          }));
-          CACHE.set(ck,results);
-          setWeekData(results);
+          const isPast=mon<getMonday(todayStr());
+          r.days.forEach(d=>{CACHE.set("day-"+d.date,{meals:d.meals,workout:d.workout},d.date<todayStr())});
+          const res=r.days.map(d=>({date:d.date,day:d.day,cal:d.totalCal,p:d.totalProtein,skip:d.skippedCount,burn:d.workoutBurn,woName:d.workout?d.workout.name:"--"}));
+          CACHE.set(ck,res,isPast);
+          setWeekData(res);
         }
       }catch(e){console.error(e)}
       setLoading(false);
@@ -257,7 +299,17 @@ function App(){
       const meals=SLOTS.filter(s=>dayMeals[s]).map(s=>{const m=dayMeals[s];return{slot:s,foodId:m.id||"skip",foodName:m.name,desc:m.desc||"",cal:m.cal||0,protein:m.p||0,carbs:m.c||0,fat:m.f||0,skipped:!!m.isSkip,skipReason:m.skipReason||skipReasons2[s]||""}});
       const payload={action:"logFullDay",date:selDate,meals,workout:dayWorkout?{workoutId:dayWorkout.id,workoutName:dayWorkout.name,duration:dayWorkout.dur,burn:dayWorkout.burn,intensity:dayWorkout.intensity}:null};
       const r=await apiPost(payload);
-      if(r.success){setMsg("\u2705 Day saved!");CACHE.clear("day-");CACHE.clear("week-")};
+      if(r.success){
+        setMsg("\u2705 Day saved!");
+        CACHE.clear("day-"+selDate);
+        CACHE.clear("week-"+getMonday(selDate));
+        prefetchedWeek=null;
+        prefetchInFlight=null;
+        // Re-prefetch and re-apply
+        await prefetchWeek(selDate);
+        const fresh=CACHE.get("day-"+selDate);
+        if(fresh)applyDayData(fresh);
+      };
     }catch(e){setMsg("\u274C Save failed")}
     setSaving(false);setTimeout(()=>setMsg(""),3000);
   };
@@ -317,7 +369,7 @@ function App(){
         h("h1",{style:{margin:0,fontSize:18,fontWeight:800}},"\u{1F37D}\uFE0F Diet + Workout"),
         h("p",{style:{margin:"2px 0 0",fontSize:11,opacity:0.8}},"Target: "+calT+" kcal | Levo "+parseTime(settings.levoTime||"6:30 AM"))
       ),
-      h("button",{onClick:()=>{LS.set("dp_url","");LS.set("dp_key","");setScreen("setup")},style:{background:"rgba(255,255,255,0.15)",border:"none",color:"#fff",padding:"6px 12px",borderRadius:8,fontSize:11,cursor:"pointer"}},"Logout")
+      h("button",{onClick:()=>{LS.set("dp_url","");LS.setSecure("dp_key","");LS.set("dp_cache_time","0");setScreen("setup")},style:{background:"rgba(255,255,255,0.15)",border:"none",color:"#fff",padding:"6px 12px",borderRadius:8,fontSize:11,cursor:"pointer"}},"Logout")
     )
   );
 
@@ -626,7 +678,7 @@ function App(){
       h("h3",{style:{margin:"0 0 8px",fontSize:14,fontWeight:700,color:"#92400e"}},"How to edit"),
       h("p",{style:{fontSize:12,color:"#78350f",lineHeight:1.6,margin:0}},"Open your Google Sheet > Settings tab > edit column B. Add foods in FoodMenu tab, workouts in WorkoutMenu tab. Changes load on next app open.")
     ),
-    h("button",{onClick:()=>{LS.set("dp_url","");LS.set("dp_key","");setScreen("setup")},style:{width:"100%",padding:12,borderRadius:10,border:"1px solid #dc2626",background:"#fef2f2",color:"#dc2626",fontSize:13,fontWeight:700,cursor:"pointer"}},"Disconnect & Reset")
+    h("button",{onClick:()=>{LS.set("dp_url","");LS.setSecure("dp_key","");LS.set("dp_cache_time","0");setScreen("setup")},style:{width:"100%",padding:12,borderRadius:10,border:"1px solid #dc2626",background:"#fef2f2",color:"#dc2626",fontSize:13,fontWeight:700,cursor:"pointer"}},"Disconnect & Reset")
   );
 
   // Bottom tabs
@@ -641,7 +693,7 @@ function App(){
 
   // Main content
   const content=h("div",{style:{maxWidth:600,margin:"0 auto",padding:"12px 16px"}},
-    tab==="today"?h("div",null,dateNav,stats,calBar,levo,...mealCards,woCard,noEat,skipWarn,saveBtn):
+    tab==="today"?h("div",null,dateNav,dayLoading?h("div",{style:{textAlign:"center",padding:40}},h("div",{style:{fontSize:32}},"\u{1F37D}\uFE0F"),h("div",{style:{color:"#64748b",fontSize:13,marginTop:8}},"Loading day...")):h("div",null,stats,calBar,levo,...mealCards,woCard,noEat,skipWarn,saveBtn)):
     tab==="week"?weekTab:
     tab==="weight"?weightTab:
     settingsTab
