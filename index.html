@@ -28,8 +28,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 <script>
 const{useState,useEffect,useCallback,createElement:h}=React;
 
-const SLOTS=["cf","bf","ms","lu","es","dn"];
-const SLOT_META={cf:{label:"Coffee",icon:"\u2615",time:"7:30 AM"},bf:{label:"Breakfast",icon:"\u{1F373}",time:"7:30 AM"},ms:{label:"Mid Snack",icon:"\u{1F95C}",time:"10:30 AM"},lu:{label:"Lunch",icon:"\u{1F35B}",time:"1:00 PM"},es:{label:"Eve Snack",icon:"\u{1FAD6}",time:"4:30 PM"},dn:{label:"Dinner",icon:"\u{1F957}",time:"7:30 PM"}};
+const SLOTS=["cf","bf","ms","lu","cf2","es","dn"];
+const SLOT_META={cf:{label:"Coffee",icon:"\u2615",time:"7:30 AM"},bf:{label:"Breakfast",icon:"\u{1F373}",time:"7:30 AM"},ms:{label:"Mid Snack",icon:"\u{1F95C}",time:"10:30 AM"},lu:{label:"Lunch",icon:"\u{1F35B}",time:"1:00 PM"},cf2:{label:"Afternoon Coffee",icon:"\u2615",time:"3:00-4:00 PM"},es:{label:"Eve Snack",icon:"\u{1FAD6}",time:"4:30 PM"},dn:{label:"Dinner",icon:"\u{1F957}",time:"7:30 PM"}};
 const COFFEE_OPTIONS=[
   {id:"cf1",name:"Black Coffee",desc:"Plain black coffee, no sugar",cal:5,p:0,c:0,f:0},
   {id:"cf2",name:"Black + Maple Syrup",desc:"Black coffee + 1 tsp organic maple syrup",cal:27,p:0,c:6,f:0},
@@ -37,6 +37,15 @@ const COFFEE_OPTIONS=[
   {id:"cf4",name:"Protein Latte",desc:"Collagen + PB protein + coffee + almond milk + maple syrup",cal:135,p:19,c:8,f:4},
   {id:"cf5",name:"Double Coffee",desc:"2 cups - 1 black + 1 latte + maple syrup",cal:89,p:3,c:16,f:1},
   {id:"cf6",name:"Iced Latte + Maple",desc:"Iced latte (low-fat milk) + 1 tsp maple syrup",cal:62,p:3,c:10,f:1},
+];
+const PM_COFFEE_OPTIONS=[
+  {id:"pc1",name:"Black Coffee",desc:"Plain black coffee, no sugar",cal:5,p:0,c:0,f:0},
+  {id:"pc2",name:"Black + Maple Syrup",desc:"Black coffee + 1 tsp organic maple syrup",cal:27,p:0,c:6,f:0},
+  {id:"pc3",name:"Latte + Maple Syrup",desc:"Latte (low-fat milk) + 1 tsp maple syrup",cal:62,p:3,c:10,f:1},
+  {id:"pc4",name:"Iced Latte + Maple",desc:"Iced latte (low-fat milk) + 1 tsp maple syrup",cal:62,p:3,c:10,f:1},
+  {id:"pc5",name:"Iced Black + Maple",desc:"Iced black coffee + 1 tsp maple syrup",cal:27,p:0,c:6,f:0},
+  {id:"pc6",name:"Green Tea",desc:"1 cup green tea (no sugar)",cal:2,p:0,c:0,f:0},
+  {id:"pc7",name:"Masala Chai (light)",desc:"Masala chai with low-fat milk, no sugar",cal:35,p:2,c:4,f:1},
 ];
 const DAY_LABELS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const SKIP={id:"skip",name:"Skip / NA",desc:"Skipping this meal",cal:0,p:0,c:0,f:0,isSkip:true};
@@ -158,7 +167,7 @@ function App(){
         if(ml.meals)ml.meals.forEach(m=>{
           if(m.skipped==="TRUE")meals[m.slot]={...SKIP,skipReason:m.skipReason};
           else if(m.slot==="cf"){const f=COFFEE_OPTIONS.find(x=>x.id===m.foodId);meals[m.slot]=f||{id:m.foodId,name:m.foodName,desc:m.desc,cal:Number(m.cal),p:Number(m.protein),c:Number(m.carbs),f:Number(m.fat)};}
-          else{const sl=menu[m.slot]||[];const f=sl.find(x=>x.id===m.foodId);meals[m.slot]=f||{id:m.foodId,name:m.foodName,desc:m.desc,cal:Number(m.cal),p:Number(m.protein),c:Number(m.carbs),f:Number(m.fat)};}
+          else if(m.slot==="cf2"){const f=PM_COFFEE_OPTIONS.find(x=>x.id===m.foodId);meals[m.slot]=f||{id:m.foodId,name:m.foodName,desc:m.desc,cal:Number(m.cal),p:Number(m.protein),c:Number(m.carbs),f:Number(m.fat)};}          else{const sl=menu[m.slot]||[];const f=sl.find(x=>x.id===m.foodId);meals[m.slot]=f||{id:m.foodId,name:m.foodName,desc:m.desc,cal:Number(m.cal),p:Number(m.protein),c:Number(m.carbs),f:Number(m.fat)};}
         });
         setDayMeals(meals);
         if(wl.workout){const f=workouts.find(x=>x.id===wl.workout.id);setDayWorkout(f||null)}else setDayWorkout(null);
@@ -218,7 +227,7 @@ function App(){
   const totalP=SLOTS.reduce((s,k)=>{const m=dayMeals[k];return s+(m&&!m.isSkip?Number(m.p)||0:0)},0);
   const woBurn=dayWorkout?Number(dayWorkout.burn)||0:0;
   const calT=Number(settings.calorieTarget)||1600;
-  const skCount=SLOTS.filter(s=>dayMeals[s]&&dayMeals[s].isSkip).length;
+  const skCount=SLOTS.filter(s=>s!=="cf"&&s!=="cf2"&&dayMeals[s]&&dayMeals[s].isSkip).length;
 
   // ====== SETUP ======
   if(screen==="setup")return h("div",{style:{background:"#f2f2f7",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:20}},
@@ -323,8 +332,8 @@ function App(){
   // Meal cards
   const mealCards=menu?SLOTS.map(slot=>{
     const chosen=dayMeals[slot];
-    const isCoffee=slot==="cf";
-    const items=isCoffee?[...COFFEE_OPTIONS,SKIP]:[...(menu[slot]||[]),SKIP];
+    const isCoffee=slot==="cf"||slot==="cf2";
+    const items=isCoffee?(slot==="cf"?[...COFFEE_OPTIONS,SKIP]:[...PM_COFFEE_OPTIONS,SKIP]):[...(menu[slot]||[]),SKIP];
     const isOpen=openSlot===slot;
     return h("div",{key:slot,style:{marginBottom:6},className:"fade-in"},
       isCoffee&&!isOpen?h("div",{onClick:()=>setOpenSlot(isOpen?null:slot),style:{background:chosen?"#fffbeb":"#fff",borderRadius:12,padding:"10px 14px",border:chosen?"1px solid #fde68a":"1px solid #e2e8f0",cursor:"pointer"}},
@@ -332,13 +341,13 @@ function App(){
           h("span",{style:{fontSize:20}},"\u2615"),
           h("div",{style:{flex:1}},
             h("div",{style:{display:"flex",justifyContent:"space-between"}},
-              h("span",{style:{fontSize:12,fontWeight:700,color:"#92400e"}},"Coffee - 7:30 AM"),
+              h("span",{style:{fontSize:12,fontWeight:700,color:"#92400e"}},SLOT_META[slot].label+" - "+SLOT_META[slot].time),
               chosen&&!chosen.isSkip?h("span",{style:{background:"#fef3c7",color:"#92400e",padding:"1px 7px",borderRadius:8,fontSize:10,fontWeight:700}},chosen.cal+" kcal"):
               chosen&&chosen.isSkip?h("span",{style:{color:"#94a3b8",fontSize:10}},"SKIPPED"):
               h("span",{style:{color:"#f59e0b",fontSize:10,fontWeight:600}},"Tap to select")
             ),
             chosen&&!chosen.isSkip?h("div",{style:{fontSize:11,color:"#78350f",marginTop:2}},chosen.name):
-            !chosen?h("div",{style:{fontSize:11,color:"#94a3b8"}},"60 min after Levothyroxine"):null
+            !chosen?h("div",{style:{fontSize:11,color:"#94a3b8"}},slot==="cf"?"60 min after Levothyroxine":"Post-lunch pick-me-up"):null
           ),
           h("span",{style:{fontSize:10,color:"#94a3b8"}},"\u25BC")
         )
@@ -361,7 +370,7 @@ function App(){
         )
       ):null,
       isCoffee&&isOpen?h("div",{style:{background:"#fffbeb",borderRadius:12,border:"1px solid #fde68a",padding:8,maxHeight:300,overflowY:"auto"}},
-        h("div",{style:{fontSize:11,fontWeight:700,color:"#92400e",marginBottom:6,paddingLeft:4}},"Choose your coffee (60 min after Levo):"),
+        h("div",{style:{fontSize:11,fontWeight:700,color:"#92400e",marginBottom:6,paddingLeft:4}},slot==="cf"?"Morning coffee (60 min after Levo):":"Afternoon coffee / tea:"),
         ...items.map((item,i)=>{
           const isSel=chosen&&chosen.id===item.id;
           return h("div",{key:i,onClick:()=>pickMeal(slot,item),style:{background:item.isSkip?"#fafafa":isSel?"#fef3c7":"#fff",borderRadius:8,padding:"8px 10px",marginBottom:4,border:item.isSkip?"1px dashed #ccc":isSel?"2px solid #d97706":"1px solid #eee",cursor:"pointer"}},
