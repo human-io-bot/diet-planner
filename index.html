@@ -28,8 +28,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 <script>
 const{useState,useEffect,useCallback,createElement:h}=React;
 
-const SLOTS=["bf","ms","lu","es","dn"];
-const SLOT_META={bf:{label:"Breakfast",icon:"\u{1F373}",time:"7:30 AM"},ms:{label:"Mid Snack",icon:"\u{1F95C}",time:"10:30 AM"},lu:{label:"Lunch",icon:"\u{1F35B}",time:"1:00 PM"},es:{label:"Eve Snack",icon:"\u{1FAD6}",time:"4:30 PM"},dn:{label:"Dinner",icon:"\u{1F957}",time:"7:30 PM"}};
+const SLOTS=["cf","bf","ms","lu","es","dn"];
+const SLOT_META={cf:{label:"Coffee",icon:"\u2615",time:"7:30 AM"},bf:{label:"Breakfast",icon:"\u{1F373}",time:"7:30 AM"},ms:{label:"Mid Snack",icon:"\u{1F95C}",time:"10:30 AM"},lu:{label:"Lunch",icon:"\u{1F35B}",time:"1:00 PM"},es:{label:"Eve Snack",icon:"\u{1FAD6}",time:"4:30 PM"},dn:{label:"Dinner",icon:"\u{1F957}",time:"7:30 PM"}};
+const COFFEE_OPTIONS=[
+  {id:"cf1",name:"Black Coffee",desc:"Plain black coffee, no sugar",cal:5,p:0,c:0,f:0},
+  {id:"cf2",name:"Black + Maple Syrup",desc:"Black coffee + 1 tsp organic maple syrup",cal:27,p:0,c:6,f:0},
+  {id:"cf3",name:"Latte + Maple Syrup",desc:"Latte (low-fat milk) + 1 tsp maple syrup",cal:62,p:3,c:10,f:1},
+  {id:"cf4",name:"Protein Latte",desc:"Collagen + PB protein + coffee + almond milk + maple syrup",cal:135,p:19,c:8,f:4},
+  {id:"cf5",name:"Double Coffee",desc:"2 cups - 1 black + 1 latte + maple syrup",cal:89,p:3,c:16,f:1},
+  {id:"cf6",name:"Iced Latte + Maple",desc:"Iced latte (low-fat milk) + 1 tsp maple syrup",cal:62,p:3,c:10,f:1},
+];
 const DAY_LABELS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const SKIP={id:"skip",name:"Skip / NA",desc:"Skipping this meal",cal:0,p:0,c:0,f:0,isSkip:true};
 const SKIP_REASONS=["Not hungry","Nausea (Zepbound)","Fasting","Running late","Ate out","Other"];
@@ -119,6 +127,7 @@ function App(){
         const meals={};
         if(ml.meals)ml.meals.forEach(m=>{
           if(m.skipped==="TRUE")meals[m.slot]={...SKIP,skipReason:m.skipReason};
+          else if(m.slot==="cf"){const f=COFFEE_OPTIONS.find(x=>x.id===m.foodId);meals[m.slot]=f||{id:m.foodId,name:m.foodName,desc:m.desc,cal:Number(m.cal),p:Number(m.protein),c:Number(m.carbs),f:Number(m.fat)};}
           else{const sl=menu[m.slot]||[];const f=sl.find(x=>x.id===m.foodId);meals[m.slot]=f||{id:m.foodId,name:m.foodName,desc:m.desc,cal:Number(m.cal),p:Number(m.protein),c:Number(m.carbs),f:Number(m.fat)};}
         });
         setDayMeals(meals);
@@ -284,10 +293,27 @@ function App(){
   // Meal cards
   const mealCards=menu?SLOTS.map(slot=>{
     const chosen=dayMeals[slot];
-    const items=[...(menu[slot]||[]),SKIP];
+    const isCoffee=slot==="cf";
+    const items=isCoffee?[...COFFEE_OPTIONS,SKIP]:[...(menu[slot]||[]),SKIP];
     const isOpen=openSlot===slot;
     return h("div",{key:slot,style:{marginBottom:6},className:"fade-in"},
-      h("div",{onClick:()=>setOpenSlot(isOpen?null:slot),style:{background:chosen&&chosen.isSkip?"#f8f8f8":"#fff",borderRadius:isOpen?"12px 12px 0 0":"12px",padding:"10px 14px",border:chosen&&chosen.isSkip?"1px dashed #ccc":"1px solid #e2e8f0",cursor:"pointer",opacity:chosen&&chosen.isSkip?0.6:1}},
+      isCoffee&&!isOpen?h("div",{onClick:()=>setOpenSlot(isOpen?null:slot),style:{background:chosen?"#fffbeb":"#fff",borderRadius:12,padding:"10px 14px",border:chosen?"1px solid #fde68a":"1px solid #e2e8f0",cursor:"pointer"}},
+        h("div",{style:{display:"flex",alignItems:"center",gap:8}},
+          h("span",{style:{fontSize:20}},"\u2615"),
+          h("div",{style:{flex:1}},
+            h("div",{style:{display:"flex",justifyContent:"space-between"}},
+              h("span",{style:{fontSize:12,fontWeight:700,color:"#92400e"}},"Coffee - 7:30 AM"),
+              chosen&&!chosen.isSkip?h("span",{style:{background:"#fef3c7",color:"#92400e",padding:"1px 7px",borderRadius:8,fontSize:10,fontWeight:700}},chosen.cal+" kcal"):
+              chosen&&chosen.isSkip?h("span",{style:{color:"#94a3b8",fontSize:10}},"SKIPPED"):
+              h("span",{style:{color:"#f59e0b",fontSize:10,fontWeight:600}},"Tap to select")
+            ),
+            chosen&&!chosen.isSkip?h("div",{style:{fontSize:11,color:"#78350f",marginTop:2}},chosen.name):
+            !chosen?h("div",{style:{fontSize:11,color:"#94a3b8"}},"60 min after Levothyroxine"):null
+          ),
+          h("span",{style:{fontSize:10,color:"#94a3b8"}},"\u25BC")
+        )
+      ):
+      !isCoffee?h("div",{onClick:()=>setOpenSlot(isOpen?null:slot),style:{background:chosen&&chosen.isSkip?"#f8f8f8":"#fff",borderRadius:isOpen?"12px 12px 0 0":"12px",padding:"10px 14px",border:chosen&&chosen.isSkip?"1px dashed #ccc":"1px solid #e2e8f0",cursor:"pointer",opacity:chosen&&chosen.isSkip?0.6:1}},
         h("div",{style:{display:"flex",alignItems:"center",gap:8}},
           h("span",{style:{fontSize:20}},chosen&&chosen.isSkip?"\u23ED\uFE0F":SLOT_META[slot].icon),
           h("div",{style:{flex:1}},
@@ -303,8 +329,26 @@ function App(){
           ),
           h("span",{style:{fontSize:10,color:"#94a3b8"}},isOpen?"\u25B2":"\u25BC")
         )
-      ),
-      isOpen?h("div",{style:{background:"#f8fafc",borderRadius:"0 0 12px 12px",border:"1px solid #e2e8f0",borderTop:"none",padding:8,maxHeight:300,overflowY:"auto"}},
+      ):null,
+      isCoffee&&isOpen?h("div",{style:{background:"#fffbeb",borderRadius:12,border:"1px solid #fde68a",padding:8,maxHeight:300,overflowY:"auto"}},
+        h("div",{style:{fontSize:11,fontWeight:700,color:"#92400e",marginBottom:6,paddingLeft:4}},"Choose your coffee (60 min after Levo):"),
+        ...items.map((item,i)=>{
+          const isSel=chosen&&chosen.id===item.id;
+          return h("div",{key:i,onClick:()=>pickMeal(slot,item),style:{background:item.isSkip?"#fafafa":isSel?"#fef3c7":"#fff",borderRadius:8,padding:"8px 10px",marginBottom:4,border:item.isSkip?"1px dashed #ccc":isSel?"2px solid #d97706":"1px solid #eee",cursor:"pointer"}},
+            h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+              h("span",{style:{fontSize:12,fontWeight:isSel?800:500,color:item.isSkip?"#94a3b8":"#1e293b"}},(isSel?"\u2705 ":"")+(item.isSkip?"\u23ED\uFE0F Skip Coffee":"\u2615 "+item.name)),
+              !item.isSkip?h("span",{style:{fontSize:10,fontWeight:700,color:"#92400e"}},item.cal+" kcal"):null
+            ),
+            !item.isSkip?h("div",{style:{fontSize:10,color:"#78350f",marginTop:2}},item.desc):null,
+            !item.isSkip&&item.p>0?h("div",{style:{display:"flex",gap:4,marginTop:3}},
+              h("span",{style:{fontSize:9,color:"#1e40af",fontWeight:600}},"P:"+item.p+"g"),
+              h("span",{style:{fontSize:9,color:"#92400e",fontWeight:600}},"C:"+item.c+"g"),
+              h("span",{style:{fontSize:9,color:"#9d174d",fontWeight:600}},"F:"+item.f+"g")
+            ):null
+          )
+        })
+      ):null,
+      isOpen&&!isCoffee?h("div",{style:{background:"#f8fafc",borderRadius:"0 0 12px 12px",border:"1px solid #e2e8f0",borderTop:"none",padding:8,maxHeight:300,overflowY:"auto"}},
         ...items.map((item,i)=>{
           const isSel=chosen&&chosen.id===item.id;
           const wouldTotal=totalCal-(chosen&&!chosen.isSkip?Number(chosen.cal)||0:0)+Number(item.cal||0);
