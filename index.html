@@ -30,6 +30,20 @@ const{useState,useEffect,useCallback,createElement:h}=React;
 
 const SLOTS=["cf","bf","ms","lu","lp","cf2","es","dn","dp"];
 const SLOT_META={cf:{label:"Coffee",icon:"\u2615",time:"7:30 AM"},bf:{label:"Breakfast",icon:"\u{1F373}",time:"7:30 AM"},ms:{label:"Mid Snack",icon:"\u{1F95C}",time:"10:30 AM"},lu:{label:"Lunch",icon:"\u{1F35B}",time:"1:00 PM"},lp:{label:"Lunch Protein",icon:"\u{1F357}",time:"with lunch"},cf2:{label:"Afternoon Coffee",icon:"\u2615",time:"3:00-4:00 PM"},es:{label:"Eve Snack",icon:"\u{1FAD6}",time:"4:30 PM"},dn:{label:"Dinner",icon:"\u{1F957}",time:"7:30 PM"},dp:{label:"Dinner Protein",icon:"\u{1F357}",time:"with dinner"}};
+
+// Sheet category → UI slot mapping
+const MENU_MAP={bf:"bf",coffee:["cf","cf2"],main:["lu","dn"],snack:["ms","es"],protein:["lp","dp"]};
+
+function mapMenu(raw){
+  const mapped={};
+  Object.entries(raw).forEach(([cat,items])=>{
+    const targets=MENU_MAP[cat];
+    if(!targets)return;
+    if(Array.isArray(targets)){targets.forEach(t=>{mapped[t]=items})}
+    else{mapped[targets]=items}
+  });
+  return mapped;
+}
 const COFFEE_OPTIONS=[
   {id:"cf1",name:"Black Coffee",desc:"Plain black coffee, no sugar",cal:5,p:0,c:0,f:0},
   {id:"cf2",name:"Black + Maple Syrup",desc:"Black coffee + 1 tsp organic maple syrup",cal:27,p:0,c:6,f:0},
@@ -46,21 +60,6 @@ const PM_COFFEE_OPTIONS=[
   {id:"pc5",name:"Iced Black + Maple",desc:"Iced black coffee + 1 tsp maple syrup",cal:27,p:0,c:6,f:0},
   {id:"pc6",name:"Green Tea",desc:"1 cup green tea (no sugar)",cal:2,p:0,c:0,f:0},
   {id:"pc7",name:"Masala Chai (light)",desc:"Masala chai with low-fat milk, no sugar",cal:35,p:2,c:4,f:1},
-];
-const LUNCH_PROTEIN=[
-  {id:"lp1",name:"Tandoori Chicken (2 pcs)",desc:"Air fryer tandoori chicken breast (100g) - Sunday prep",cal:165,p:31,c:2,f:4},
-  {id:"lp2",name:"Tikka Chicken (2 pcs)",desc:"Air fryer chicken tikka (100g) - Sunday prep",cal:165,p:31,c:2,f:4},
-  {id:"lp3",name:"Tandoori Prawns (6 pcs)",desc:"Air fryer tandoori prawns (100g) - Sunday prep",cal:110,p:22,c:2,f:2},
-  {id:"lp4",name:"Tikka Prawns (6 pcs)",desc:"Air fryer tikka masala prawns (100g) - Sunday prep",cal:115,p:22,c:3,f:2},
-  {id:"lp5",name:"No Protein Today",desc:"Keeping it vegetarian today",cal:0,p:0,c:0,f:0,isVeg:true},
-];
-const DINNER_PROTEIN=[
-  {id:"dp1",name:"Tandoori Chicken (2 pcs)",desc:"Air fryer tandoori chicken (100g) - reheated",cal:165,p:31,c:2,f:4},
-  {id:"dp2",name:"Tikka Chicken (2 pcs)",desc:"Air fryer tikka chicken (100g) - reheated",cal:165,p:31,c:2,f:4},
-  {id:"dp3",name:"Tandoori Prawns (5-6 pcs)",desc:"Air fryer tandoori prawns (100g) - reheated",cal:110,p:22,c:2,f:2},
-  {id:"dp4",name:"Tikka Prawns (5-6 pcs)",desc:"Air fryer tikka prawns (100g) - reheated",cal:115,p:22,c:3,f:2},
-  {id:"dp5",name:"Boiled Eggs (2)",desc:"2 boiled eggs - quick protein add",cal:140,p:12,c:0,f:10},
-  {id:"dp6",name:"No Protein Tonight",desc:"Keeping it vegetarian tonight",cal:0,p:0,c:0,f:0,isVeg:true},
 ];
 const DAY_LABELS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const SKIP={id:"skip",name:"Skip / NA",desc:"Skipping this meal",cal:0,p:0,c:0,f:0,isSkip:true};
@@ -197,7 +196,8 @@ function App(){
         const cachedWo=LS.get("dp_workouts");
         const cachedSettings=LS.get("dp_settings");
         const cacheAge=Number(LS.get("dp_cache_time"))||0;
-        const isFresh=Date.now()-cacheAge<3600000; // 1 hour cache
+        const cacheVer=LS.get("dp_cache_ver")||"0";
+        const isFresh=Date.now()-cacheAge<3600000&&cacheVer==="3"; // v3 = coffee from sheet
 
         if(isFresh&&cachedMenu&&cachedWo&&cachedSettings){
           setMenu(JSON.parse(cachedMenu));
@@ -205,22 +205,23 @@ function App(){
           setSettings(JSON.parse(cachedSettings));
           setLoading(false);
           // Refresh in background silently
-          api("getMenu").then(m=>{if(m.menu){setMenu(m.menu);LS.set("dp_menu",JSON.stringify(m.menu))}});
+          api("getMenu").then(m=>{if(m.menu){const mapped=mapMenu(m.menu);setMenu(mapped);LS.set("dp_menu",JSON.stringify(mapped))}});
           api("getWorkouts").then(w=>{if(w.workouts){setWorkouts(w.workouts);LS.set("dp_workouts",JSON.stringify(w.workouts))}});
           return;
         }
 
         const[m,w,s]=await Promise.all([api("getMenu"),api("getWorkouts"),api("getSettings")]);
-        if(m.menu){setMenu(m.menu);LS.set("dp_menu",JSON.stringify(m.menu))}
+        if(m.menu){const mapped=mapMenu(m.menu);setMenu(mapped);LS.set("dp_menu",JSON.stringify(mapped))}
         if(w.workouts){setWorkouts(w.workouts);LS.set("dp_workouts",JSON.stringify(w.workouts))}
         if(s.settings){setSettings(s.settings);LS.set("dp_settings",JSON.stringify(s.settings))}
         LS.set("dp_cache_time",String(Date.now()));
-      }catch(e){
+        LS.set("dp_cache_ver","3");
+      }      } catch(e){
         // Fallback to cached data even if stale
         const cm=LS.get("dp_menu"),cw=LS.get("dp_workouts"),cs=LS.get("dp_settings");
-        if(cm)setMenu(JSON.parse(cm));
-        if(cw)setWorkouts(JSON.parse(cw));
-        if(cs)setSettings(JSON.parse(cs));
+        if(cm){try{setMenu(JSON.parse(cm))}catch(ex){}}
+        if(cw){try{setWorkouts(JSON.parse(cw))}catch(ex){}}
+        if(cs){try{setSettings(JSON.parse(cs))}catch(ex){}}
       }
       setLoading(false);
     })();
@@ -289,7 +290,7 @@ function App(){
     })();
   },[tab,selDate,screen]);
 
-  const pickMeal=(slot,item)=>{setDayMeals(p=>({...p,[slot]:item}));setOpenSlot(null);if(item.isSkip&&slot!=="lp"&&slot!=="dp")setSkipModal(slot)};
+  const pickMeal=(slot,item)=>{setDayMeals(p=>({...p,[slot]:item}));setOpenSlot(null);if(item.isSkip&&slot!=="lp"&&slot!=="dp"&&slot!=="cf"&&slot!=="cf2")setSkipModal(slot)};
   const setSkipR=(slot,reason)=>{setSkipReasons2(p=>({...p,[slot]:reason}));setDayMeals(p=>({...p,[slot]:{...SKIP,skipReason:reason}}));setSkipModal(null)};
   const pickWorkout=(w)=>{setDayWorkout(w);setOpenWo(false)};
 
@@ -435,21 +436,25 @@ function App(){
     const chosen=dayMeals[slot];
     const isCoffee=slot==="cf"||slot==="cf2";
     const isProtein=slot==="lp"||slot==="dp";
-    const items=isCoffee?(slot==="cf"?[...COFFEE_OPTIONS,SKIP]:[...PM_COFFEE_OPTIONS,SKIP]):isProtein?(slot==="lp"?LUNCH_PROTEIN:DINNER_PROTEIN):[...(menu[slot]||[]),SKIP];
+    // All items now come from the mapped menu (including coffee)
+    const rawItems=isProtein?(menu[slot]||[]).map(it=>it.cal===0?{...it,isVeg:true}:it):(menu[slot]||[]);
+    // Coffee and protein don't need extra SKIP option (coffee has "Skip Coffee", protein has "No Protein" in sheet)
+    const items=(isCoffee||isProtein)?rawItems:[...rawItems,SKIP];
     const isOpen=openSlot===slot;
     return h("div",{key:slot,style:{marginBottom:6},className:"fade-in"},
-      isCoffee&&!isOpen?h("div",{onClick:()=>setOpenSlot(isOpen?null:slot),style:{background:chosen?"#fffbeb":"#fff",borderRadius:12,padding:"10px 14px",border:chosen?"1px solid #fde68a":"1px solid #e2e8f0",cursor:"pointer"}},
+      isCoffee&&!isOpen?h("div",{onClick:()=>setOpenSlot(isOpen?null:slot),style:{background:chosen&&chosen.cal>0?"#fffbeb":"#fff",borderRadius:12,padding:"10px 14px",border:chosen&&chosen.cal>0?"1px solid #fde68a":"1px solid #e2e8f0",cursor:"pointer"}},
         h("div",{style:{display:"flex",alignItems:"center",gap:8}},
           h("span",{style:{fontSize:20}},"\u2615"),
           h("div",{style:{flex:1}},
             h("div",{style:{display:"flex",justifyContent:"space-between"}},
               h("span",{style:{fontSize:12,fontWeight:700,color:"#92400e"}},SLOT_META[slot].label+" - "+SLOT_META[slot].time),
-              chosen&&!chosen.isSkip?h("span",{style:{background:"#fef3c7",color:"#92400e",padding:"1px 7px",borderRadius:8,fontSize:10,fontWeight:700}},chosen.cal+" kcal"):
-              chosen&&chosen.isSkip?h("span",{style:{color:"#94a3b8",fontSize:10}},"SKIPPED"):
+              chosen&&chosen.cal>0?h("span",{style:{background:"#fef3c7",color:"#92400e",padding:"1px 7px",borderRadius:8,fontSize:10,fontWeight:700}},chosen.cal+" kcal"):
+              chosen&&chosen.cal===0?h("span",{style:{color:"#94a3b8",fontSize:10}},"Skipped"):
               h("span",{style:{color:"#f59e0b",fontSize:10,fontWeight:600}},"Tap to select")
             ),
-            chosen&&!chosen.isSkip?h("div",{style:{fontSize:11,color:"#78350f",marginTop:2}},chosen.name):
-            !chosen?h("div",{style:{fontSize:11,color:"#94a3b8"}},slot==="cf"?"60 min after Levothyroxine":"Post-lunch pick-me-up"):null
+            chosen&&chosen.cal>0?h("div",{style:{fontSize:11,color:"#78350f",marginTop:2}},chosen.name):
+            chosen&&chosen.cal===0?h("div",{style:{fontSize:11,color:"#94a3b8",marginTop:2}},chosen.name):
+            h("div",{style:{fontSize:11,color:"#94a3b8"}},slot==="cf"?"60 min after Levothyroxine":"Post-lunch pick-me-up")
           ),
           h("span",{style:{fontSize:10,color:"#94a3b8"}},"\u25BC")
         )
