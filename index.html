@@ -10,10 +10,10 @@
 <link rel="manifest" href="./manifest.json">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:#f2f2f7;-webkit-font-smoothing:antialiased}
-input,select,button{font-family:inherit}
-input[type=range]{-webkit-appearance:none;height:6px;border-radius:3px;background:#e2e8f0;outline:none}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#7c3aed;cursor:pointer}
+body{font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;background:#f2f2f7;-webkit-font-smoothing:antialiased;font-size:16px}
+input,select,button{font-family:inherit;font-size:16px}
+input[type=range]{-webkit-appearance:none;height:8px;border-radius:4px;background:#e2e8f0;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#7c3aed;cursor:pointer}
 </style>
 </head>
 <body>
@@ -377,18 +377,18 @@ function App(){
           h("p",{style:{margin:"6px 0 0",fontSize:13,opacity:0.85}},"Connect to your Google Sheet")),
         h("div",{style:{background:"#fff",borderRadius:16,padding:24}},
           step===1?h("div",null,
-            h("h3",{style:{margin:"0 0 4px",fontSize:16,fontWeight:700}},"Step 1: Web App URL"),
-            h("p",{style:{margin:"0 0 14px",fontSize:12,color:"#64748b"}},"Paste your Google Apps Script URL"),
-            h("input",{value:apiUrl,onChange:function(e){setApiUrl(e.target.value)},placeholder:"https://script.google.com/macros/s/.../exec",style:{width:"100%",padding:12,borderRadius:10,border:"1px solid #d1d5db",fontSize:13,marginBottom:12,boxSizing:"border-box"}}),
-            h("button",{onClick:function(){if(apiUrl.trim()){setErr("");setStep(2)}else setErr("Enter URL first")},style:{width:"100%",padding:14,borderRadius:12,border:"none",background:"#1e3a5f",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer"}},"Next")):
+            h("h3",{style:{margin:"0 0 6px",fontSize:18,fontWeight:700}},"Step 1: Web App URL"),
+            h("p",{style:{margin:"0 0 16px",fontSize:14,color:"#64748b"}},"Paste your Google Apps Script URL"),
+            h("input",{value:apiUrl,onChange:function(e){setApiUrl(e.target.value)},placeholder:"https://script.google.com/macros/s/.../exec",style:{width:"100%",padding:14,borderRadius:12,border:"1px solid #d1d5db",fontSize:15,marginBottom:14,boxSizing:"border-box"}}),
+            h("button",{onClick:function(){if(apiUrl.trim()){setErr("");setStep(2)}else setErr("Enter URL first")},style:{width:"100%",padding:16,borderRadius:14,border:"none",background:"#1e3a5f",color:"#fff",fontSize:17,fontWeight:700,cursor:"pointer"}},"Next")):
           h("div",null,
-            h("h3",{style:{margin:"0 0 4px",fontSize:16,fontWeight:700}},"Step 2: API Key"),
-            h("p",{style:{margin:"0 0 14px",fontSize:12,color:"#64748b"}},"Enter your secret password"),
-            h("input",{value:apiKey,onChange:function(e){setApiKey(e.target.value)},placeholder:"Your secret password",type:"password",style:{width:"100%",padding:12,borderRadius:10,border:"1px solid #d1d5db",fontSize:13,marginBottom:12,boxSizing:"border-box"}}),
-            h("div",{style:{display:"flex",gap:8}},
-              h("button",{onClick:function(){setStep(1)},style:{flex:1,padding:14,borderRadius:12,border:"1px solid #d1d5db",background:"#fff",fontSize:14,fontWeight:600,cursor:"pointer"}},"Back"),
-              h("button",{onClick:saveConfig,disabled:loading,style:{flex:2,padding:14,borderRadius:12,border:"none",background:loading?"#94a3b8":"#2d6a4f",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer"}},loading?"Connecting...":"Connect"))),
-          err?h("div",{style:{marginTop:12,padding:10,borderRadius:8,background:"#fef2f2",color:"#dc2626",fontSize:12,fontWeight:600}},err):null)));
+            h("h3",{style:{margin:"0 0 6px",fontSize:18,fontWeight:700}},"Step 2: API Key"),
+            h("p",{style:{margin:"0 0 16px",fontSize:14,color:"#64748b"}},"Enter your secret password"),
+            h("input",{value:apiKey,onChange:function(e){setApiKey(e.target.value)},placeholder:"Your secret password",type:"password",style:{width:"100%",padding:14,borderRadius:12,border:"1px solid #d1d5db",fontSize:15,marginBottom:14,boxSizing:"border-box"}}),
+            h("div",{style:{display:"flex",gap:10}},
+              h("button",{onClick:function(){setStep(1)},style:{flex:1,padding:16,borderRadius:14,border:"1px solid #d1d5db",background:"#fff",fontSize:16,fontWeight:600,cursor:"pointer"}},"Back"),
+              h("button",{onClick:saveConfig,disabled:loading,style:{flex:2,padding:16,borderRadius:14,border:"none",background:loading?"#94a3b8":"#2d6a4f",color:"#fff",fontSize:17,fontWeight:700,cursor:"pointer"}},loading?"Connecting...":"Connect"))),
+          err?h("div",{style:{marginTop:14,padding:14,borderRadius:10,background:"#fef2f2",color:"#dc2626",fontSize:14,fontWeight:600}},err):null)));
   }
 
   if(screen==="loading")return h("div",{style:{background:"#f2f2f7",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}},
@@ -401,26 +401,26 @@ function App(){
 
   /* -- Skip Modal -- */
   var skipMod=skipModal?h("div",{style:{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.5)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:20},onClick:function(){setSkipR(skipModal,"No reason")}},
-    h("div",{onClick:function(e){e.stopPropagation()},style:{background:"#fff",borderRadius:20,padding:24,maxWidth:340,width:"100%"}},
-      h("h3",{style:{margin:"0 0 14px",fontSize:17,fontWeight:800,textAlign:"center"}},"Why skipping?"),
-      SKIP_REASONS.map(function(r){return h("button",{key:r,onClick:function(){setSkipR(skipModal,r)},style:{display:"block",width:"100%",padding:12,borderRadius:10,border:"1px solid #e5e5ea",background:"#f9f9fb",fontSize:14,cursor:"pointer",textAlign:"left",marginBottom:6}},r)}))):null;
+    h("div",{onClick:function(e){e.stopPropagation()},style:{background:"#fff",borderRadius:20,padding:28,maxWidth:380,width:"100%"}},
+      h("h3",{style:{margin:"0 0 16px",fontSize:20,fontWeight:800,textAlign:"center"}},"Why skipping?"),
+      SKIP_REASONS.map(function(r){return h("button",{key:r,onClick:function(){setSkipR(skipModal,r)},style:{display:"block",width:"100%",padding:16,borderRadius:12,border:"1px solid #e5e5ea",background:"#f9f9fb",fontSize:16,cursor:"pointer",textAlign:"left",marginBottom:8}},r)}))):null;
 
   /* -- Header -- */
-  var header=h("div",{style:{background:"linear-gradient(135deg,#1e3a5f,#2d6a4f)",padding:"18px 16px 14px",color:"#fff"}},
+  var header=h("div",{style:{background:"linear-gradient(135deg,#1e3a5f,#2d6a4f)",padding:"22px 18px 18px",color:"#fff"}},
     h("div",{style:{maxWidth:600,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center"}},
       h("div",null,
-        h("h1",{style:{margin:0,fontSize:18,fontWeight:800}},"\uD83C\uDF7D\uFE0F Diet + Workout"),
-        h("p",{style:{margin:"2px 0 0",fontSize:11,opacity:0.8}},"Target: "+calT+" kcal | Levo "+parseTime(settings.levoTime||"6:30 AM"))),
-      h("button",{onClick:logout,style:{background:"rgba(255,255,255,0.15)",border:"none",color:"#fff",padding:"6px 12px",borderRadius:8,fontSize:11,cursor:"pointer"}},"Logout")));
+        h("h1",{style:{margin:0,fontSize:22,fontWeight:800}},"\uD83C\uDF7D\uFE0F Diet + Workout"),
+        h("p",{style:{margin:"4px 0 0",fontSize:14,opacity:0.85}},"Target: "+calT+" kcal | Levo "+parseTime(settings.levoTime||"6:30 AM"))),
+      h("button",{onClick:logout,style:{background:"rgba(255,255,255,0.2)",border:"none",color:"#fff",padding:"10px 16px",borderRadius:10,fontSize:14,cursor:"pointer",fontWeight:600}},"Logout")));
 
   /* -- Date Nav -- */
-  var dateNav=h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}},
-    h("button",{onClick:function(){setSelDate(addDays(selDate,-1))},style:{background:"#fff",border:"1px solid #d1d5db",borderRadius:10,padding:"8px 14px",fontSize:16,cursor:"pointer"}},"\u2190"),
+  var dateNav=h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}},
+    h("button",{onClick:function(){setSelDate(addDays(selDate,-1))},style:{background:"#fff",border:"1px solid #d1d5db",borderRadius:12,padding:"12px 18px",fontSize:22,cursor:"pointer",minWidth:50,textAlign:"center"}},"\u2190"),
     h("div",{style:{textAlign:"center"}},
-      h("div",{style:{fontSize:16,fontWeight:800}},DAY_LABELS[dayOfWeek(selDate)]),
-      h("div",{style:{fontSize:12,color:"#64748b"}},selDate+(selDate===todayStr()?" (Today)":"")),
-      settings.injectionDay&&DAY_LABELS[dayOfWeek(selDate)].toLowerCase()===String(settings.injectionDay).toLowerCase()?h("span",{style:{fontSize:10,background:"#fef3c7",color:"#92400e",padding:"1px 8px",borderRadius:8,fontWeight:600}},"\uD83D\uDC89 Injection Day"):null),
-    h("button",{onClick:function(){setSelDate(addDays(selDate,1))},style:{background:"#fff",border:"1px solid #d1d5db",borderRadius:10,padding:"8px 14px",fontSize:16,cursor:"pointer"}},"\u2192"));
+      h("div",{style:{fontSize:20,fontWeight:800}},DAY_LABELS[dayOfWeek(selDate)]),
+      h("div",{style:{fontSize:14,color:"#64748b",marginTop:2}},selDate+(selDate===todayStr()?" (Today)":"")),
+      settings.injectionDay&&DAY_LABELS[dayOfWeek(selDate)].toLowerCase()===String(settings.injectionDay).toLowerCase()?h("span",{style:{fontSize:13,background:"#fef3c7",color:"#92400e",padding:"3px 10px",borderRadius:8,fontWeight:600,display:"inline-block",marginTop:4}},"\uD83D\uDC89 Injection Day"):null),
+    h("button",{onClick:function(){setSelDate(addDays(selDate,1))},style:{background:"#fff",border:"1px solid #d1d5db",borderRadius:12,padding:"12px 18px",fontSize:22,cursor:"pointer",minWidth:50,textAlign:"center"}},"\u2192"));
 
   /* -- Stats -- */
   var statsData=[
@@ -429,26 +429,26 @@ function App(){
     {l:"Net",v:totalCal-woBurn,u:"kcal",c:"#2563eb",bg:"#eff6ff"},
     {l:"Protein",v:totalP,u:"g",c:"#7c3aed",bg:"#f5f3ff"}
   ];
-  var stats=h("div",{style:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:12}},
-    statsData.map(function(s2,i){return h("div",{key:i,style:{background:s2.bg,borderRadius:10,padding:"8px 4px",textAlign:"center"}},
-      h("div",{style:{fontSize:9,color:"#64748b",fontWeight:600}},s2.l),
-      h("div",{style:{fontSize:17,fontWeight:800,color:s2.c}},s2.v),
-      h("div",{style:{fontSize:9,color:"#94a3b8"}},s2.u))}));
+  var stats=h("div",{style:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:14}},
+    statsData.map(function(s2,i){return h("div",{key:i,style:{background:s2.bg,borderRadius:12,padding:"12px 6px",textAlign:"center"}},
+      h("div",{style:{fontSize:12,color:"#64748b",fontWeight:600}},s2.l),
+      h("div",{style:{fontSize:22,fontWeight:800,color:s2.c}},s2.v),
+      h("div",{style:{fontSize:11,color:"#94a3b8"}},s2.u))}));
 
   /* -- Cal Bar -- */
-  var calBar=h("div",{style:{background:"#fff",borderRadius:10,padding:"10px 12px",marginBottom:12}},
-    h("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:4}},
-      h("span",{style:{fontSize:11,fontWeight:600}},"Calories"),
-      h("span",{style:{fontSize:11,fontWeight:700,color:totalCal>calT?"#dc2626":"#059669"}},totalCal+"/"+calT)),
-    h("div",{style:{background:"#f1f5f9",borderRadius:6,height:10,overflow:"hidden"}},
-      h("div",{style:{width:Math.min((totalCal/calT)*100,100)+"%",height:"100%",borderRadius:6,background:totalCal>calT?"#ef4444":totalCal>calT*0.9?"#f59e0b":"#22c55e",transition:"width 0.3s"}})));
+  var calBar=h("div",{style:{background:"#fff",borderRadius:12,padding:"14px 16px",marginBottom:14}},
+    h("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:6}},
+      h("span",{style:{fontSize:15,fontWeight:600}},"Calories"),
+      h("span",{style:{fontSize:15,fontWeight:700,color:totalCal>calT?"#dc2626":"#059669"}},totalCal+"/"+calT)),
+    h("div",{style:{background:"#f1f5f9",borderRadius:8,height:14,overflow:"hidden"}},
+      h("div",{style:{width:Math.min((totalCal/calT)*100,100)+"%",height:"100%",borderRadius:8,background:totalCal>calT?"#ef4444":totalCal>calT*0.9?"#f59e0b":"#22c55e",transition:"width 0.3s"}})));
 
   /* -- Levo Card -- */
-  var levo=h("div",{style:{background:"#fff",borderRadius:12,padding:"10px 14px",marginBottom:6,display:"flex",alignItems:"center",gap:10,border:"1px solid #e2e8f0"}},
-    h("span",{style:{fontSize:20}},"\uD83D\uDC8A"),
+  var levo=h("div",{style:{background:"#fff",borderRadius:14,padding:"14px 16px",marginBottom:8,display:"flex",alignItems:"center",gap:12,border:"1px solid #e2e8f0"}},
+    h("span",{style:{fontSize:28}},"\uD83D\uDC8A"),
     h("div",{style:{flex:1}},
-      h("div",{style:{fontSize:12,fontWeight:700}},"Levothyroxine - "+parseTime(settings.levoTime||"6:30 AM")),
-      h("div",{style:{fontSize:11,color:"#64748b"}},"Empty stomach + warm water. No food/coffee 60 min.")));
+      h("div",{style:{fontSize:15,fontWeight:700}},"Levothyroxine - "+parseTime(settings.levoTime||"6:30 AM")),
+      h("div",{style:{fontSize:13,color:"#64748b"}},"Empty stomach + warm water. No food/coffee 60 min.")));
 
   /* -- Meal Cards -- */
   var mealCards=menu?SLOTS.map(function(slot){
@@ -466,46 +466,46 @@ function App(){
     var collapsed=null;
     if(!isOpen){
       if(isCoffee){
-        collapsed=h("div",{key:slot,onClick:function(){setOpenSlot(slot)},style:{background:chosen&&Number(chosen.cal)>0?"#fffbeb":"#fff",borderRadius:12,padding:"10px 14px",border:chosen&&Number(chosen.cal)>0?"1px solid #fde68a":"1px solid #e2e8f0",cursor:"pointer",marginBottom:6}},
-          h("div",{style:{display:"flex",alignItems:"center",gap:8}},
-            h("span",{style:{fontSize:20}},"\u2615"),
+        collapsed=h("div",{key:slot,onClick:function(){setOpenSlot(slot)},style:{background:chosen&&Number(chosen.cal)>0?"#fffbeb":"#fff",borderRadius:14,padding:"14px 16px",border:chosen&&Number(chosen.cal)>0?"1px solid #fde68a":"1px solid #e2e8f0",cursor:"pointer",marginBottom:8}},
+          h("div",{style:{display:"flex",alignItems:"center",gap:12}},
+            h("span",{style:{fontSize:26}},"\u2615"),
             h("div",{style:{flex:1}},
-              h("div",{style:{display:"flex",justifyContent:"space-between"}},
-                h("span",{style:{fontSize:12,fontWeight:700,color:"#92400e"}},SLOT_META[slot].label+" - "+SLOT_META[slot].time),
-                chosen&&Number(chosen.cal)>0?h("span",{style:{background:"#fef3c7",color:"#92400e",padding:"1px 7px",borderRadius:8,fontSize:10,fontWeight:700}},chosen.cal+" kcal"):
-                chosen?h("span",{style:{color:"#94a3b8",fontSize:10}},"Skipped"):
-                h("span",{style:{color:"#f59e0b",fontSize:10,fontWeight:600}},"Tap to select")),
-              chosen&&Number(chosen.cal)>0?h("div",{style:{fontSize:11,color:"#78350f",marginTop:2}},chosen.name):
-              !chosen?h("div",{style:{fontSize:11,color:"#94a3b8"}},slot==="cf"?"60 min after Levothyroxine":"Post-lunch pick-me-up"):
-              h("div",{style:{fontSize:11,color:"#94a3b8"}},chosen.name)),
-            h("span",{style:{fontSize:10,color:"#94a3b8"}},"\u25BC")));
+              h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+                h("span",{style:{fontSize:15,fontWeight:700,color:"#92400e"}},SLOT_META[slot].label+" - "+SLOT_META[slot].time),
+                chosen&&Number(chosen.cal)>0?h("span",{style:{background:"#fef3c7",color:"#92400e",padding:"3px 10px",borderRadius:10,fontSize:13,fontWeight:700}},chosen.cal+" kcal"):
+                chosen?h("span",{style:{color:"#94a3b8",fontSize:13}},"Skipped"):
+                h("span",{style:{color:"#f59e0b",fontSize:13,fontWeight:600}},"Tap to select")),
+              chosen&&Number(chosen.cal)>0?h("div",{style:{fontSize:14,color:"#78350f",marginTop:3}},chosen.name):
+              !chosen?h("div",{style:{fontSize:13,color:"#94a3b8"}},slot==="cf"?"60 min after Levothyroxine":"Post-lunch pick-me-up"):
+              h("div",{style:{fontSize:13,color:"#94a3b8"}},chosen.name)),
+            h("span",{style:{fontSize:14,color:"#94a3b8"}},"\u25BC")));
       }else if(isProtein){
-        collapsed=h("div",{key:slot,onClick:function(){setOpenSlot(slot)},style:{background:chosen&&!chosen.isVeg?"#fef2f2":chosen&&chosen.isVeg?"#ecfdf5":"#fff",borderRadius:12,padding:"8px 14px",border:chosen&&!chosen.isVeg?"1px solid #fca5a5":chosen&&chosen.isVeg?"1px solid #86efac":"1px dashed #d1d5db",cursor:"pointer",marginBottom:6}},
-          h("div",{style:{display:"flex",alignItems:"center",gap:8}},
-            h("span",{style:{fontSize:18}},chosen&&chosen.isVeg?"\uD83C\uDF3F":"\uD83C\uDF57"),
+        collapsed=h("div",{key:slot,onClick:function(){setOpenSlot(slot)},style:{background:chosen&&!chosen.isVeg?"#fef2f2":chosen&&chosen.isVeg?"#ecfdf5":"#fff",borderRadius:14,padding:"12px 16px",border:chosen&&!chosen.isVeg?"1px solid #fca5a5":chosen&&chosen.isVeg?"1px solid #86efac":"1px dashed #d1d5db",cursor:"pointer",marginBottom:8}},
+          h("div",{style:{display:"flex",alignItems:"center",gap:12}},
+            h("span",{style:{fontSize:24}},chosen&&chosen.isVeg?"\uD83C\uDF3F":"\uD83C\uDF57"),
             h("div",{style:{flex:1}},
-              h("div",{style:{display:"flex",justifyContent:"space-between"}},
-                h("span",{style:{fontSize:11,fontWeight:700,color:chosen&&!chosen.isVeg?"#dc2626":chosen&&chosen.isVeg?"#059669":"#64748b"}},SLOT_META[slot].label),
-                chosen&&!chosen.isVeg?h("span",{style:{background:"#fee2e2",color:"#dc2626",padding:"1px 7px",borderRadius:8,fontSize:10,fontWeight:700}},"+"+chosen.cal+" kcal"):
-                chosen&&chosen.isVeg?h("span",{style:{background:"#ecfdf5",color:"#059669",padding:"1px 7px",borderRadius:8,fontSize:10,fontWeight:600}},"Veg today"):
-                h("span",{style:{color:"#f59e0b",fontSize:10,fontWeight:600}},"Add protein?")),
-              chosen?h("div",{style:{fontSize:11,color:"#64748b",marginTop:1}},chosen.name):
-              h("div",{style:{fontSize:10,color:"#94a3b8"}},"Tandoori chicken, tikka prawns, or keep veg")),
-            h("span",{style:{fontSize:10,color:"#94a3b8"}},"\u25BC")));
+              h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+                h("span",{style:{fontSize:14,fontWeight:700,color:chosen&&!chosen.isVeg?"#dc2626":chosen&&chosen.isVeg?"#059669":"#64748b"}},SLOT_META[slot].label),
+                chosen&&!chosen.isVeg?h("span",{style:{background:"#fee2e2",color:"#dc2626",padding:"3px 10px",borderRadius:10,fontSize:13,fontWeight:700}},"+"+chosen.cal+" kcal"):
+                chosen&&chosen.isVeg?h("span",{style:{background:"#ecfdf5",color:"#059669",padding:"3px 10px",borderRadius:10,fontSize:13,fontWeight:600}},"Veg today"):
+                h("span",{style:{color:"#f59e0b",fontSize:13,fontWeight:600}},"Add protein?")),
+              chosen?h("div",{style:{fontSize:14,color:"#64748b",marginTop:2}},chosen.name):
+              h("div",{style:{fontSize:13,color:"#94a3b8"}},"Tandoori chicken, tikka prawns, or keep veg")),
+            h("span",{style:{fontSize:14,color:"#94a3b8"}},"\u25BC")));
       }else{
-        collapsed=h("div",{key:slot,onClick:function(){setOpenSlot(slot)},style:{background:chosen&&chosen.isSkip?"#f8f8f8":"#fff",borderRadius:12,padding:"10px 14px",border:chosen&&chosen.isSkip?"1px dashed #ccc":"1px solid #e2e8f0",cursor:"pointer",opacity:chosen&&chosen.isSkip?0.6:1,marginBottom:6}},
-          h("div",{style:{display:"flex",alignItems:"center",gap:8}},
-            h("span",{style:{fontSize:20}},chosen&&chosen.isSkip?"\u23ED\uFE0F":SLOT_META[slot].icon),
+        collapsed=h("div",{key:slot,onClick:function(){setOpenSlot(slot)},style:{background:chosen&&chosen.isSkip?"#f8f8f8":"#fff",borderRadius:14,padding:"14px 16px",border:chosen&&chosen.isSkip?"1px dashed #ccc":"1px solid #e2e8f0",cursor:"pointer",opacity:chosen&&chosen.isSkip?0.6:1,marginBottom:8}},
+          h("div",{style:{display:"flex",alignItems:"center",gap:12}},
+            h("span",{style:{fontSize:26}},chosen&&chosen.isSkip?"\u23ED\uFE0F":SLOT_META[slot].icon),
             h("div",{style:{flex:1}},
-              h("div",{style:{display:"flex",justifyContent:"space-between"}},
-                h("span",{style:{fontSize:12,fontWeight:700,color:chosen&&chosen.isSkip?"#94a3b8":"#1e293b"}},SLOT_META[slot].label+" - "+SLOT_META[slot].time),
-                chosen&&!chosen.isSkip?h("span",{style:{background:"#fee2e2",color:"#dc2626",padding:"1px 7px",borderRadius:8,fontSize:10,fontWeight:700}},chosen.cal+" kcal"):
-                chosen&&chosen.isSkip?h("span",{style:{color:"#94a3b8",fontSize:10}},"SKIPPED"):
-                h("span",{style:{color:"#f59e0b",fontSize:10,fontWeight:600}},"Tap to select")),
-              chosen&&!chosen.isSkip?h("div",{style:{fontSize:11,color:"#475569",marginTop:2}},chosen.name):
-              chosen&&chosen.isSkip?h("div",{style:{fontSize:11,color:"#94a3b8",fontStyle:"italic"}},chosen.skipReason||"Skipped"):
-              h("div",{style:{fontSize:11,color:"#94a3b8"}},"No selection yet")),
-            h("span",{style:{fontSize:10,color:"#94a3b8"}},"\u25BC")));
+              h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+                h("span",{style:{fontSize:15,fontWeight:700,color:chosen&&chosen.isSkip?"#94a3b8":"#1e293b"}},SLOT_META[slot].label+" - "+SLOT_META[slot].time),
+                chosen&&!chosen.isSkip?h("span",{style:{background:"#fee2e2",color:"#dc2626",padding:"3px 10px",borderRadius:10,fontSize:13,fontWeight:700}},chosen.cal+" kcal"):
+                chosen&&chosen.isSkip?h("span",{style:{color:"#94a3b8",fontSize:13}},"SKIPPED"):
+                h("span",{style:{color:"#f59e0b",fontSize:13,fontWeight:600}},"Tap to select")),
+              chosen&&!chosen.isSkip?h("div",{style:{fontSize:14,color:"#475569",marginTop:3}},chosen.name):
+              chosen&&chosen.isSkip?h("div",{style:{fontSize:13,color:"#94a3b8",fontStyle:"italic"}},chosen.skipReason||"Skipped"):
+              h("div",{style:{fontSize:13,color:"#94a3b8"}},"No selection yet")),
+            h("span",{style:{fontSize:14,color:"#94a3b8"}},"\u25BC")));
       }
       return collapsed;
     }
@@ -515,11 +515,11 @@ function App(){
     var borderColor=isCoffee?"#fde68a":isProtein?"#fca5a5":"#e2e8f0";
     var headerText=isCoffee?(slot==="cf"?"Morning coffee (60 min after Levo):":"Afternoon coffee / tea:"):isProtein?(slot==="lp"?"Add protein to lunch:":"Add protein to dinner:"):"Choose an option:";
 
-    return h("div",{key:slot,style:{marginBottom:6}},
-      h("div",{style:{background:bgColor,borderRadius:12,border:"1px solid "+borderColor,padding:8,maxHeight:350,overflowY:"auto"}},
-        h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,paddingLeft:4}},
-          h("span",{style:{fontSize:11,fontWeight:700,color:isCoffee?"#92400e":isProtein?"#dc2626":"#64748b"}},headerText),
-          h("span",{onClick:function(){setOpenSlot(null)},style:{fontSize:11,color:"#94a3b8",cursor:"pointer",padding:"2px 8px"}},"\u2716 close")),
+    return h("div",{key:slot,style:{marginBottom:8}},
+      h("div",{style:{background:bgColor,borderRadius:14,border:"1px solid "+borderColor,padding:10,maxHeight:400,overflowY:"auto"}},
+        h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,paddingLeft:4}},
+          h("span",{style:{fontSize:14,fontWeight:700,color:isCoffee?"#92400e":isProtein?"#dc2626":"#64748b"}},headerText),
+          h("span",{onClick:function(){setOpenSlot(null)},style:{fontSize:14,color:"#94a3b8",cursor:"pointer",padding:"4px 12px"}},"\u2716 close")),
         items.map(function(item,i){
           var isSel=chosen&&chosen.id===item.id;
           var isSkipItem=item.isSkip||false;
@@ -530,143 +530,143 @@ function App(){
           var bg2=isCoffee?(isSel?"#fef3c7":"#fff"):isProtein?(isVegItem?(isSel?"#ecfdf5":"#f0fdf4"):(isSel?"#fee2e2":"#fff")):(isSkipItem?"#fafafa":(isSel?"#e0f2fe":"#fff"));
           var bdr=isCoffee?(isSel?"2px solid #d97706":"1px solid #eee"):isProtein?(isVegItem?(isSel?"2px solid #059669":"1px solid #bbf7d0"):(isSel?"2px solid #dc2626":"1px solid #eee")):(isSkipItem?"1px dashed #ccc":(isSel?"2px solid #1e3a5f":"1px solid #eee"));
 
-          return h("div",{key:i,onClick:function(){pickMeal(slot,item)},style:{background:bg2,borderRadius:8,padding:"8px 10px",marginBottom:4,border:bdr,cursor:"pointer"}},
+          return h("div",{key:i,onClick:function(){pickMeal(slot,item)},style:{background:bg2,borderRadius:12,padding:"12px 14px",marginBottom:6,border:bdr,cursor:"pointer",minHeight:48}},
             h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
-              h("span",{style:{fontSize:12,fontWeight:isSel?800:500,color:isSkipItem||isVegItem?"#94a3b8":"#1e293b"}},
+              h("span",{style:{fontSize:15,fontWeight:isSel?800:500,color:isSkipItem||isVegItem?"#94a3b8":"#1e293b"}},
                 (isSel?"\u2705 ":"")+(isCoffee?"\u2615 ":"")+(isProtein?(isVegItem?"\uD83C\uDF3F ":"\uD83C\uDF57 "):"")+(isSkipItem?"\u23ED\uFE0F ":"")+item.name),
-              h("div",{style:{display:"flex",gap:4,alignItems:"center"}},
-                over&&!isSel?h("span",{style:{fontSize:8,color:"#dc2626",fontWeight:600}},"over"):null,
-                Number(item.cal)>0?h("span",{style:{fontSize:10,fontWeight:700,color:isCoffee?"#92400e":isProtein?"#dc2626":"#dc2626"}},(isProtein?"+":"")+item.cal+" kcal"):h("span",{style:{fontSize:10,color:"#94a3b8"}},"0 kcal"))),
-            Number(item.cal)>0?h("div",{style:{fontSize:10,color:"#64748b",marginTop:2}},item.desc):null,
-            Number(item.cal)>0&&Number(item.p)>0?h("div",{style:{display:"flex",gap:4,marginTop:3}},
-              h("span",{style:{fontSize:9,color:"#1e40af",fontWeight:600}},"P:"+item.p+"g"),
-              h("span",{style:{fontSize:9,color:"#92400e",fontWeight:600}},"C:"+item.c+"g"),
-              h("span",{style:{fontSize:9,color:"#9d174d",fontWeight:600}},"F:"+item.f+"g")):null);
+              h("div",{style:{display:"flex",gap:6,alignItems:"center"}},
+                over&&!isSel?h("span",{style:{fontSize:11,color:"#dc2626",fontWeight:600}},"over"):null,
+                Number(item.cal)>0?h("span",{style:{fontSize:13,fontWeight:700,color:isCoffee?"#92400e":isProtein?"#dc2626":"#dc2626"}},(isProtein?"+":"")+item.cal+" kcal"):h("span",{style:{fontSize:12,color:"#94a3b8"}},"0 kcal"))),
+            Number(item.cal)>0?h("div",{style:{fontSize:13,color:"#64748b",marginTop:4}},item.desc):null,
+            Number(item.cal)>0&&Number(item.p)>0?h("div",{style:{display:"flex",gap:8,marginTop:4}},
+              h("span",{style:{fontSize:12,color:"#1e40af",fontWeight:600}},"P:"+item.p+"g"),
+              h("span",{style:{fontSize:12,color:"#92400e",fontWeight:600}},"C:"+item.c+"g"),
+              h("span",{style:{fontSize:12,color:"#9d174d",fontWeight:600}},"F:"+item.f+"g")):null);
         })));
   }).filter(Boolean):[];
 
   /* -- Workout Card -- */
-  var woCard=workouts.length>0?h("div",{style:{marginBottom:6}},
-    h("div",{onClick:function(){setOpenWo(!openWo)},style:{background:dayWorkout?(dayWorkout.color||"#f1f5f9"):"#fff",borderRadius:openWo?"12px 12px 0 0":"12px",padding:"10px 14px",border:dayWorkout?"2px solid "+(dayWorkout.border||"#ccc"):"1px solid #e2e8f0",cursor:"pointer"}},
+  var woCard=workouts.length>0?h("div",{style:{marginBottom:8}},
+    h("div",{onClick:function(){setOpenWo(!openWo)},style:{background:dayWorkout?(dayWorkout.color||"#f1f5f9"):"#fff",borderRadius:openWo?"14px 14px 0 0":"14px",padding:"14px 16px",border:dayWorkout?"2px solid "+(dayWorkout.border||"#ccc"):"1px solid #e2e8f0",cursor:"pointer"}},
       h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
-        h("div",{style:{display:"flex",alignItems:"center",gap:8}},
-          h("span",{style:{fontSize:20}},dayWorkout?dayWorkout.icon:"\uD83C\uDFCB\uFE0F"),
+        h("div",{style:{display:"flex",alignItems:"center",gap:12}},
+          h("span",{style:{fontSize:26}},dayWorkout?dayWorkout.icon:"\uD83C\uDFCB\uFE0F"),
           h("div",null,
-            h("div",{style:{fontSize:12,fontWeight:700}},dayWorkout?dayWorkout.name:"Select Workout"),
-            dayWorkout?h("div",{style:{fontSize:10,color:"#64748b"}},dayWorkout.dur):null)),
-        h("div",{style:{display:"flex",gap:6,alignItems:"center"}},
-          dayWorkout&&dayWorkout.burn>0?h("span",{style:{background:"#fff",padding:"3px 8px",borderRadius:8,fontSize:11,fontWeight:800,color:"#f59e0b"}},"-"+dayWorkout.burn):null,
-          h("span",{style:{fontSize:10,color:"#94a3b8"}},openWo?"\u25B2":"\u25BC")))),
-    openWo?h("div",{style:{background:"#f8fafc",borderRadius:"0 0 12px 12px",border:"1px solid #e2e8f0",borderTop:"none",padding:8,maxHeight:300,overflowY:"auto"}},
+            h("div",{style:{fontSize:15,fontWeight:700}},dayWorkout?dayWorkout.name:"Select Workout"),
+            dayWorkout?h("div",{style:{fontSize:13,color:"#64748b"}},dayWorkout.dur):null)),
+        h("div",{style:{display:"flex",gap:8,alignItems:"center"}},
+          dayWorkout&&dayWorkout.burn>0?h("span",{style:{background:"#fff",padding:"5px 12px",borderRadius:10,fontSize:14,fontWeight:800,color:"#f59e0b"}},"-"+dayWorkout.burn):null,
+          h("span",{style:{fontSize:14,color:"#94a3b8"}},openWo?"\u25B2":"\u25BC")))),
+    openWo?h("div",{style:{background:"#f8fafc",borderRadius:"0 0 14px 14px",border:"1px solid #e2e8f0",borderTop:"none",padding:10,maxHeight:350,overflowY:"auto"}},
       workouts.map(function(w,i){
         var isSel=dayWorkout&&dayWorkout.id===w.id;
-        return h("div",{key:i,onClick:function(){pickWorkout(w)},style:{background:isSel?(w.color||"#e0f2fe"):"#fff",borderRadius:8,padding:"8px 10px",marginBottom:4,border:isSel?"2px solid "+(w.border||"#1e3a5f"):"1px solid #eee",cursor:"pointer"}},
-          h("div",{style:{display:"flex",justifyContent:"space-between"}},
-            h("span",{style:{fontSize:12,fontWeight:isSel?800:500}},(isSel?"\u2705 ":"")+w.icon+" "+w.name),
-            h("div",{style:{display:"flex",gap:4}},
-              h("span",{style:{fontSize:9,padding:"1px 6px",borderRadius:6,background:w.intensity==="High"?"#fee2e2":w.intensity==="Moderate"?"#fef3c7":"#f1f5f9",color:w.intensity==="High"?"#dc2626":w.intensity==="Moderate"?"#92400e":"#64748b",fontWeight:600}},w.intensity),
-              w.burn>0?h("span",{style:{fontSize:10,fontWeight:700,color:"#f59e0b"}},"-"+w.burn):null)))})):null):null;
+        return h("div",{key:i,onClick:function(){pickWorkout(w)},style:{background:isSel?(w.color||"#e0f2fe"):"#fff",borderRadius:12,padding:"12px 14px",marginBottom:6,border:isSel?"2px solid "+(w.border||"#1e3a5f"):"1px solid #eee",cursor:"pointer",minHeight:48}},
+          h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+            h("span",{style:{fontSize:15,fontWeight:isSel?800:500}},(isSel?"\u2705 ":"")+w.icon+" "+w.name),
+            h("div",{style:{display:"flex",gap:6}},
+              h("span",{style:{fontSize:12,padding:"3px 8px",borderRadius:8,background:w.intensity==="High"?"#fee2e2":w.intensity==="Moderate"?"#fef3c7":"#f1f5f9",color:w.intensity==="High"?"#dc2626":w.intensity==="Moderate"?"#92400e":"#64748b",fontWeight:600}},w.intensity),
+              w.burn>0?h("span",{style:{fontSize:13,fontWeight:700,color:"#f59e0b"}},"-"+w.burn):null)))})):null):null;
 
-  var noEat=h("div",{style:{background:"#1e293b",borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",gap:8}},
-    h("span",{style:{fontSize:16}},"\uD83C\uDF19"),
-    h("span",{style:{color:"#fff",fontSize:12,fontWeight:600}},"No eating after "+parseTime(settings.noEatAfter||"8:30 PM")));
+  var noEat=h("div",{style:{background:"#1e293b",borderRadius:14,padding:"14px 18px",marginBottom:14,display:"flex",alignItems:"center",gap:10}},
+    h("span",{style:{fontSize:22}},"\uD83C\uDF19"),
+    h("span",{style:{color:"#fff",fontSize:15,fontWeight:600}},"No eating after "+parseTime(settings.noEatAfter||"8:30 PM")));
 
-  var skipWarn=skCount>=3?h("div",{style:{background:"#fef2f2",borderRadius:10,padding:"10px 14px",border:"1px solid #fca5a5",marginBottom:12,fontSize:12,color:"#dc2626",fontWeight:600}},"\u26A0\uFE0F "+skCount+" meals skipped. Try to eat at least 3 meals on Zepbound."):null;
+  var skipWarn=skCount>=3?h("div",{style:{background:"#fef2f2",borderRadius:12,padding:"14px 18px",border:"1px solid #fca5a5",marginBottom:14,fontSize:15,color:"#dc2626",fontWeight:600}},"\u26A0\uFE0F "+skCount+" meals skipped. Try to eat at least 3 meals on Zepbound."):null;
 
-  var saveBtn=h("button",{onClick:saveDay,disabled:saving,style:{width:"100%",padding:16,borderRadius:14,border:"none",background:saving?"#94a3b8":"linear-gradient(135deg,#1e3a5f,#2d6a4f)",color:"#fff",fontSize:16,fontWeight:800,cursor:"pointer"}},saving?"Saving...":"\uD83D\uDCBE Save Today's Plan");
+  var saveBtn=h("button",{onClick:saveDay,disabled:saving,style:{width:"100%",padding:18,borderRadius:16,border:"none",background:saving?"#94a3b8":"linear-gradient(135deg,#1e3a5f,#2d6a4f)",color:"#fff",fontSize:18,fontWeight:800,cursor:"pointer"}},saving?"Saving...":"\uD83D\uDCBE Save Today's Plan");
 
   /* -- Today Tab -- */
   var todayTab=h("div",null,dateNav,
-    dayLoading?h("div",{style:{textAlign:"center",padding:40}},h("div",{style:{fontSize:32}},"\uD83C\uDF7D\uFE0F"),h("div",{style:{color:"#64748b",fontSize:13,marginTop:8}},"Loading...")):
+    dayLoading?h("div",{style:{textAlign:"center",padding:50}},h("div",{style:{fontSize:40}},"\uD83C\uDF7D\uFE0F"),h("div",{style:{color:"#64748b",fontSize:16,marginTop:10}},"Loading...")):
     h("div",null,stats,calBar,levo,mealCards,woCard,noEat,skipWarn,saveBtn));
 
   /* -- Week Tab -- */
   var weekTab=h("div",null,
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}},
-      h("button",{onClick:function(){setSelDate(addDays(getMonday(selDate),-7))},style:{background:"#fff",border:"1px solid #ccc",borderRadius:8,padding:"6px 12px",cursor:"pointer"}},"\u2190 Prev"),
-      h("span",{style:{fontSize:14,fontWeight:700}},"Week of "+getMonday(selDate)),
-      h("button",{onClick:function(){setSelDate(addDays(getMonday(selDate),7))},style:{background:"#fff",border:"1px solid #ccc",borderRadius:8,padding:"6px 12px",cursor:"pointer"}},"Next \u2192")),
-    loading?h("div",{style:{textAlign:"center",padding:40,color:"#64748b"}},"Loading week..."):
+      h("button",{onClick:function(){setSelDate(addDays(getMonday(selDate),-7))},style:{background:"#fff",border:"1px solid #ccc",borderRadius:10,padding:"10px 16px",fontSize:16,cursor:"pointer"}},"\u2190 Prev"),
+      h("span",{style:{fontSize:16,fontWeight:700}},"Week of "+getMonday(selDate)),
+      h("button",{onClick:function(){setSelDate(addDays(getMonday(selDate),7))},style:{background:"#fff",border:"1px solid #ccc",borderRadius:10,padding:"10px 16px",fontSize:16,cursor:"pointer"}},"Next \u2192")),
+    loading?h("div",{style:{textAlign:"center",padding:40,color:"#64748b",fontSize:16}},"Loading week..."):
     h("div",null,
       weekData.map(function(d,i){
-        return h("div",{key:i,style:{background:d.date===todayStr()?"#e0f2fe":"#fff",borderRadius:10,padding:"10px 14px",marginBottom:6,border:d.date===todayStr()?"2px solid #1e3a5f":"1px solid #e2e8f0"}},
+        return h("div",{key:i,style:{background:d.date===todayStr()?"#e0f2fe":"#fff",borderRadius:12,padding:"14px 16px",marginBottom:8,border:d.date===todayStr()?"2px solid #1e3a5f":"1px solid #e2e8f0"}},
           h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
             h("div",null,
-              h("span",{style:{fontSize:13,fontWeight:700}},d.day.slice(0,3)),
-              h("span",{style:{fontSize:11,color:"#64748b",marginLeft:6}},d.date),
-              d.date===todayStr()?h("span",{style:{fontSize:9,background:"#1e3a5f",color:"#fff",padding:"1px 6px",borderRadius:6,marginLeft:6}},"Today"):null),
-            h("div",{style:{display:"flex",gap:8,alignItems:"center"}},
-              h("span",{style:{fontSize:15,fontWeight:800,color:d.cal>calT?"#dc2626":"#059669"}},d.cal),
-              h("span",{style:{fontSize:10,color:"#f59e0b",fontWeight:600}},"-"+d.burn),
-              h("span",{style:{fontSize:12,fontWeight:800,color:"#2563eb"}},d.cal-d.burn))),
-          h("div",{style:{display:"flex",gap:8,marginTop:4,fontSize:10,color:"#64748b"}},
+              h("span",{style:{fontSize:16,fontWeight:700}},d.day.slice(0,3)),
+              h("span",{style:{fontSize:13,color:"#64748b",marginLeft:8}},d.date),
+              d.date===todayStr()?h("span",{style:{fontSize:11,background:"#1e3a5f",color:"#fff",padding:"2px 8px",borderRadius:6,marginLeft:8}},"Today"):null),
+            h("div",{style:{display:"flex",gap:10,alignItems:"center"}},
+              h("span",{style:{fontSize:18,fontWeight:800,color:d.cal>calT?"#dc2626":"#059669"}},d.cal),
+              h("span",{style:{fontSize:13,color:"#f59e0b",fontWeight:600}},"-"+d.burn),
+              h("span",{style:{fontSize:15,fontWeight:800,color:"#2563eb"}},d.cal-d.burn))),
+          h("div",{style:{display:"flex",gap:10,marginTop:6,fontSize:13,color:"#64748b"}},
             h("span",null,"P: "+d.p+"g"),
             h("span",null,"WO: "+d.woName),
             d.skip>0?h("span",{style:{color:"#dc2626"}},"Skip: "+d.skip):null))}),
-      weekData.length>0?h("div",{style:{background:"#1e3a5f",borderRadius:10,padding:14,color:"#fff",marginTop:8,display:"flex",justifyContent:"space-around",textAlign:"center"}},
-        h("div",null,h("div",{style:{fontSize:10,opacity:0.7}},"Avg Cal"),h("div",{style:{fontSize:18,fontWeight:800}},Math.round(weekData.reduce(function(s2,d){return s2+d.cal},0)/7))),
-        h("div",null,h("div",{style:{fontSize:10,opacity:0.7}},"Avg P"),h("div",{style:{fontSize:18,fontWeight:800}},Math.round(weekData.reduce(function(s2,d){return s2+d.p},0)/7)+"g")),
-        h("div",null,h("div",{style:{fontSize:10,opacity:0.7}},"Burn"),h("div",{style:{fontSize:18,fontWeight:800}},weekData.reduce(function(s2,d){return s2+d.burn},0))),
-        h("div",null,h("div",{style:{fontSize:10,opacity:0.7}},"Net"),h("div",{style:{fontSize:18,fontWeight:800}},Math.round(weekData.reduce(function(s2,d){return s2+d.cal-d.burn},0)/7)))):null));
+      weekData.length>0?h("div",{style:{background:"#1e3a5f",borderRadius:12,padding:18,color:"#fff",marginTop:10,display:"flex",justifyContent:"space-around",textAlign:"center"}},
+        h("div",null,h("div",{style:{fontSize:12,opacity:0.7}},"Avg Cal"),h("div",{style:{fontSize:22,fontWeight:800}},Math.round(weekData.reduce(function(s2,d){return s2+d.cal},0)/7))),
+        h("div",null,h("div",{style:{fontSize:12,opacity:0.7}},"Avg P"),h("div",{style:{fontSize:22,fontWeight:800}},Math.round(weekData.reduce(function(s2,d){return s2+d.p},0)/7)+"g")),
+        h("div",null,h("div",{style:{fontSize:12,opacity:0.7}},"Burn"),h("div",{style:{fontSize:22,fontWeight:800}},weekData.reduce(function(s2,d){return s2+d.burn},0))),
+        h("div",null,h("div",{style:{fontSize:12,opacity:0.7}},"Net"),h("div",{style:{fontSize:22,fontWeight:800}},Math.round(weekData.reduce(function(s2,d){return s2+d.cal-d.burn},0)/7)))):null));
 
   /* -- Weight Tab -- */
   var weightTab=h("div",null,
-    h("div",{style:{background:"#fff",borderRadius:14,padding:16,marginBottom:12,border:"1px solid #e2e8f0"}},
-      h("h3",{style:{margin:"0 0 12px",fontSize:16,fontWeight:800}},"Log Today's Weight"),
-      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}},
-        h("div",null,h("label",{style:{fontSize:11,fontWeight:600,color:"#64748b"}},"Weight (kg)"),h("input",{value:wf.weight,onChange:function(e){setWf(function(p){return Object.assign({},p,{weight:e.target.value})})},type:"number",step:"0.1",placeholder:"e.g. 107.5",style:{width:"100%",padding:10,borderRadius:8,border:"1px solid #d1d5db",fontSize:14,boxSizing:"border-box"}})),
-        h("div",null,h("label",{style:{fontSize:11,fontWeight:600,color:"#64748b"}},"Waist (cm)"),h("input",{value:wf.waist,onChange:function(e){setWf(function(p){return Object.assign({},p,{waist:e.target.value})})},type:"number",step:"0.5",placeholder:"optional",style:{width:"100%",padding:10,borderRadius:8,border:"1px solid #d1d5db",fontSize:14,boxSizing:"border-box"}})),
-        h("div",null,h("label",{style:{fontSize:11,fontWeight:600,color:"#64748b"}},"Water (L)"),h("input",{value:wf.water,onChange:function(e){setWf(function(p){return Object.assign({},p,{water:e.target.value})})},type:"number",step:"0.5",style:{width:"100%",padding:10,borderRadius:8,border:"1px solid #d1d5db",fontSize:14,boxSizing:"border-box"}})),
-        h("div",null,h("label",{style:{fontSize:11,fontWeight:600,color:"#64748b"}},"Energy (1-10)"),h("input",{value:wf.energy,onChange:function(e){setWf(function(p){return Object.assign({},p,{energy:e.target.value})})},type:"range",min:"1",max:"10",style:{width:"100%"}}),h("div",{style:{textAlign:"center",fontSize:14,fontWeight:700,color:"#7c3aed"}},wf.energy)),
-        h("div",null,h("label",{style:{fontSize:11,fontWeight:600,color:"#64748b"}},"Nausea (1-10)"),h("input",{value:wf.nausea,onChange:function(e){setWf(function(p){return Object.assign({},p,{nausea:e.target.value})})},type:"range",min:"1",max:"10",style:{width:"100%"}}),h("div",{style:{textAlign:"center",fontSize:14,fontWeight:700,color:"#f59e0b"}},wf.nausea)),
-        h("div",null,h("label",{style:{fontSize:11,fontWeight:600,color:"#64748b"}},"Mood (1-10)"),h("input",{value:wf.mood,onChange:function(e){setWf(function(p){return Object.assign({},p,{mood:e.target.value})})},type:"range",min:"1",max:"10",style:{width:"100%"}}),h("div",{style:{textAlign:"center",fontSize:14,fontWeight:700,color:"#059669"}},wf.mood))),
-      h("div",{style:{marginTop:8}},h("label",{style:{fontSize:11,fontWeight:600,color:"#64748b"}},"Notes"),h("input",{value:wf.notes,onChange:function(e){setWf(function(p){return Object.assign({},p,{notes:e.target.value})})},placeholder:"How are you feeling?",style:{width:"100%",padding:10,borderRadius:8,border:"1px solid #d1d5db",fontSize:13,boxSizing:"border-box"}})),
-      h("button",{onClick:saveWeight,disabled:saving,style:{width:"100%",marginTop:12,padding:14,borderRadius:12,border:"none",background:saving?"#94a3b8":"#7c3aed",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer"}},saving?"Saving...":"Save Weight Log")),
-    h("div",{style:{background:"#fff",borderRadius:14,padding:16,border:"1px solid #e2e8f0"}},
-      h("h3",{style:{margin:"0 0 12px",fontSize:16,fontWeight:800}},"Weight Trend"),
-      weightHist.length===0?h("p",{style:{fontSize:13,color:"#94a3b8",textAlign:"center"}},"No data yet. Start logging!"):
+    h("div",{style:{background:"#fff",borderRadius:16,padding:20,marginBottom:14,border:"1px solid #e2e8f0"}},
+      h("h3",{style:{margin:"0 0 14px",fontSize:20,fontWeight:800}},"Log Today's Weight"),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}},
+        h("div",null,h("label",{style:{fontSize:14,fontWeight:600,color:"#64748b"}},"Weight (kg)"),h("input",{value:wf.weight,onChange:function(e){setWf(function(p){return Object.assign({},p,{weight:e.target.value})})},type:"number",step:"0.1",placeholder:"e.g. 107.5",style:{width:"100%",padding:14,borderRadius:10,border:"1px solid #d1d5db",fontSize:16,boxSizing:"border-box",marginTop:4}})),
+        h("div",null,h("label",{style:{fontSize:14,fontWeight:600,color:"#64748b"}},"Waist (cm)"),h("input",{value:wf.waist,onChange:function(e){setWf(function(p){return Object.assign({},p,{waist:e.target.value})})},type:"number",step:"0.5",placeholder:"optional",style:{width:"100%",padding:14,borderRadius:10,border:"1px solid #d1d5db",fontSize:16,boxSizing:"border-box",marginTop:4}})),
+        h("div",null,h("label",{style:{fontSize:14,fontWeight:600,color:"#64748b"}},"Water (L)"),h("input",{value:wf.water,onChange:function(e){setWf(function(p){return Object.assign({},p,{water:e.target.value})})},type:"number",step:"0.5",style:{width:"100%",padding:14,borderRadius:10,border:"1px solid #d1d5db",fontSize:16,boxSizing:"border-box",marginTop:4}})),
+        h("div",null,h("label",{style:{fontSize:14,fontWeight:600,color:"#64748b"}},"Energy (1-10)"),h("input",{value:wf.energy,onChange:function(e){setWf(function(p){return Object.assign({},p,{energy:e.target.value})})},type:"range",min:"1",max:"10",style:{width:"100%",marginTop:6}}),h("div",{style:{textAlign:"center",fontSize:18,fontWeight:700,color:"#7c3aed"}},wf.energy)),
+        h("div",null,h("label",{style:{fontSize:14,fontWeight:600,color:"#64748b"}},"Nausea (1-10)"),h("input",{value:wf.nausea,onChange:function(e){setWf(function(p){return Object.assign({},p,{nausea:e.target.value})})},type:"range",min:"1",max:"10",style:{width:"100%",marginTop:6}}),h("div",{style:{textAlign:"center",fontSize:18,fontWeight:700,color:"#f59e0b"}},wf.nausea)),
+        h("div",null,h("label",{style:{fontSize:14,fontWeight:600,color:"#64748b"}},"Mood (1-10)"),h("input",{value:wf.mood,onChange:function(e){setWf(function(p){return Object.assign({},p,{mood:e.target.value})})},type:"range",min:"1",max:"10",style:{width:"100%",marginTop:6}}),h("div",{style:{textAlign:"center",fontSize:18,fontWeight:700,color:"#059669"}},wf.mood))),
+      h("div",{style:{marginTop:12}},h("label",{style:{fontSize:14,fontWeight:600,color:"#64748b"}},"Notes"),h("input",{value:wf.notes,onChange:function(e){setWf(function(p){return Object.assign({},p,{notes:e.target.value})})},placeholder:"How are you feeling?",style:{width:"100%",padding:14,borderRadius:10,border:"1px solid #d1d5db",fontSize:15,boxSizing:"border-box",marginTop:4}})),
+      h("button",{onClick:saveWeight,disabled:saving,style:{width:"100%",marginTop:16,padding:18,borderRadius:14,border:"none",background:saving?"#94a3b8":"#7c3aed",color:"#fff",fontSize:17,fontWeight:700,cursor:"pointer"}},saving?"Saving...":"Save Weight Log")),
+    h("div",{style:{background:"#fff",borderRadius:16,padding:20,border:"1px solid #e2e8f0"}},
+      h("h3",{style:{margin:"0 0 14px",fontSize:20,fontWeight:800}},"Weight Trend"),
+      weightHist.length===0?h("p",{style:{fontSize:15,color:"#94a3b8",textAlign:"center"}},"No data yet. Start logging!"):
       h("div",null,
-        h("div",{style:{height:150,display:"flex",alignItems:"flex-end",gap:2,marginBottom:12}},
+        h("div",{style:{height:160,display:"flex",alignItems:"flex-end",gap:3,marginBottom:14}},
           weightHist.slice(-30).map(function(w,i){
             var wt=Number(w.weight)||0;
             var vals=weightHist.slice(-30).map(function(x){return Number(x.weight)||200});
             var mn=Math.min.apply(null,vals)-2,mx=Math.max.apply(null,vals)+2;
-            var ht=mx===mn?50:((wt-mn)/(mx-mn))*130+10;
+            var ht=mx===mn?50:((wt-mn)/(mx-mn))*140+10;
             return h("div",{key:i,style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}},
-              h("span",{style:{fontSize:8,color:"#64748b"}},wt),
+              h("span",{style:{fontSize:10,color:"#64748b"}},wt),
               h("div",{style:{width:"100%",height:ht,background:"linear-gradient(180deg,#7c3aed,#a78bfa)",borderRadius:"4px 4px 0 0",minHeight:4}}),
-              h("span",{style:{fontSize:7,color:"#94a3b8"}},w.date.slice(5)))})),
-        weightHist.length>=2?h("div",{style:{display:"flex",justifyContent:"space-around",textAlign:"center",background:"#f5f3ff",borderRadius:10,padding:12}},
-          h("div",null,h("div",{style:{fontSize:10,color:"#64748b"}},"Start"),h("div",{style:{fontSize:16,fontWeight:800,color:"#7c3aed"}},weightHist[0].weight+" kg")),
-          h("div",null,h("div",{style:{fontSize:10,color:"#64748b"}},"Current"),h("div",{style:{fontSize:16,fontWeight:800,color:"#7c3aed"}},weightHist[weightHist.length-1].weight+" kg")),
-          h("div",null,h("div",{style:{fontSize:10,color:"#64748b"}},"Lost"),h("div",{style:{fontSize:16,fontWeight:800,color:"#059669"}},(Number(weightHist[0].weight)-Number(weightHist[weightHist.length-1].weight)).toFixed(1)+" kg"))):null)));
+              h("span",{style:{fontSize:9,color:"#94a3b8"}},w.date.slice(5)))})),
+        weightHist.length>=2?h("div",{style:{display:"flex",justifyContent:"space-around",textAlign:"center",background:"#f5f3ff",borderRadius:12,padding:16}},
+          h("div",null,h("div",{style:{fontSize:12,color:"#64748b"}},"Start"),h("div",{style:{fontSize:20,fontWeight:800,color:"#7c3aed"}},weightHist[0].weight+" kg")),
+          h("div",null,h("div",{style:{fontSize:12,color:"#64748b"}},"Current"),h("div",{style:{fontSize:20,fontWeight:800,color:"#7c3aed"}},weightHist[weightHist.length-1].weight+" kg")),
+          h("div",null,h("div",{style:{fontSize:12,color:"#64748b"}},"Lost"),h("div",{style:{fontSize:20,fontWeight:800,color:"#059669"}},(Number(weightHist[0].weight)-Number(weightHist[weightHist.length-1].weight)).toFixed(1)+" kg"))):null)));
 
   /* -- Settings Tab -- */
   var settingsTab=h("div",null,
-    h("div",{style:{background:"#fff",borderRadius:14,padding:16,marginBottom:12,border:"1px solid #e2e8f0"}},
-      h("h3",{style:{margin:"0 0 12px",fontSize:16,fontWeight:800}},"Your Settings"),
+    h("div",{style:{background:"#fff",borderRadius:16,padding:20,marginBottom:14,border:"1px solid #e2e8f0"}},
+      h("h3",{style:{margin:"0 0 14px",fontSize:20,fontWeight:800}},"Your Settings"),
       Object.keys(settings).filter(function(k){return k!=="apiKey"}).map(function(k){
-        return h("div",{key:k,style:{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid #f1f5f9"}},
-          h("span",{style:{fontSize:12,fontWeight:600,color:"#475569"}},k),
-          h("span",{style:{fontSize:12,color:"#1e293b",fontWeight:700}},String(settings[k])))})),
-    h("div",{style:{background:"#fffbeb",borderRadius:14,padding:16,border:"1px solid #fde68a",marginBottom:12}},
-      h("h3",{style:{margin:"0 0 8px",fontSize:14,fontWeight:700,color:"#92400e"}},"How to edit"),
-      h("p",{style:{fontSize:12,color:"#78350f",lineHeight:1.6,margin:0}},"Open your Google Sheet > Settings tab > edit column B. Add foods in FoodMenu tab (categories: coffee, bf, main, snack, protein). Changes load on next app open.")),
-    h("button",{onClick:logout,style:{width:"100%",padding:12,borderRadius:10,border:"1px solid #dc2626",background:"#fef2f2",color:"#dc2626",fontSize:13,fontWeight:700,cursor:"pointer"}},"Disconnect & Reset"));
+        return h("div",{key:k,style:{display:"flex",justifyContent:"space-between",padding:"12px 0",borderBottom:"1px solid #f1f5f9"}},
+          h("span",{style:{fontSize:14,fontWeight:600,color:"#475569"}},k),
+          h("span",{style:{fontSize:14,color:"#1e293b",fontWeight:700}},String(settings[k])))})),
+    h("div",{style:{background:"#fffbeb",borderRadius:16,padding:20,border:"1px solid #fde68a",marginBottom:14}},
+      h("h3",{style:{margin:"0 0 10px",fontSize:16,fontWeight:700,color:"#92400e"}},"How to edit"),
+      h("p",{style:{fontSize:14,color:"#78350f",lineHeight:1.6,margin:0}},"Open your Google Sheet > Settings tab > edit column B. Add foods in FoodMenu tab (categories: coffee, bf, main, snack, protein). Changes load on next app open.")),
+    h("button",{onClick:logout,style:{width:"100%",padding:16,borderRadius:12,border:"1px solid #dc2626",background:"#fef2f2",color:"#dc2626",fontSize:16,fontWeight:700,cursor:"pointer"}},"Disconnect & Reset"));
 
   /* -- Bottom Tabs -- */
   var tabs=[{k:"today",l:"Today",ic:"\uD83D\uDCC5"},{k:"week",l:"Week",ic:"\uD83D\uDCCA"},{k:"weight",l:"Weight",ic:"\u2696\uFE0F"},{k:"settings",l:"Settings",ic:"\u2699\uFE0F"}];
-  var bottomBar=h("div",{style:{position:"fixed",bottom:0,left:0,right:0,background:"#fff",borderTop:"1px solid #e2e8f0",display:"flex",justifyContent:"space-around",padding:"8px 0 12px",zIndex:50}},
+  var bottomBar=h("div",{style:{position:"fixed",bottom:0,left:0,right:0,background:"#fff",borderTop:"1px solid #e2e8f0",display:"flex",justifyContent:"space-around",padding:"10px 0 16px",zIndex:50}},
     tabs.map(function(t){
-      return h("button",{key:t.k,onClick:function(){setTab(t.k)},style:{background:"none",border:"none",cursor:"pointer",textAlign:"center",padding:"4px 16px",borderRadius:8,color:tab===t.k?"#1e3a5f":"#94a3b8"}},
-        h("div",{style:{fontSize:22}},t.ic),
-        h("div",{style:{fontSize:10,fontWeight:tab===t.k?800:500,marginTop:2}},t.l))}));
+      return h("button",{key:t.k,onClick:function(){setTab(t.k)},style:{background:"none",border:"none",cursor:"pointer",textAlign:"center",padding:"6px 20px",borderRadius:10,color:tab===t.k?"#1e3a5f":"#94a3b8"}},
+        h("div",{style:{fontSize:26}},t.ic),
+        h("div",{style:{fontSize:12,fontWeight:tab===t.k?800:500,marginTop:3}},t.l))}));
 
   /* -- Content -- */
-  var content=h("div",{style:{maxWidth:600,margin:"0 auto",padding:"12px 16px"}},
+  var content=h("div",{style:{maxWidth:600,margin:"0 auto",padding:"14px 18px"}},
     tab==="today"?todayTab:tab==="week"?weekTab:tab==="weight"?weightTab:settingsTab);
 
-  return h("div",{style:{paddingBottom:80}},toast,skipMod,header,content,bottomBar);
+  return h("div",{style:{paddingBottom:90}},toast,skipMod,header,content,bottomBar);
 }
 
 /* ===== RENDER ===== */
