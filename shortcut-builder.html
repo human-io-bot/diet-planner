@@ -177,75 +177,89 @@ Tap <b>Add Action</b> → search <b>"Current Date"</b> → tap it
 
 <div class="card">
 <div class="step-title">🔁 The Pattern (repeat for each type below)</div>
-<div class="step-body">Each health metric follows the same 3-action pattern:</div>
-<div class="action-block">
-<div class="action-label">Step A</div>
+<div class="step-body">Each health metric follows the same 4-action pattern:</div>
+<div class="action-block purple">
+<div class="action-label purple">Step A</div>
 <div class="action-content">Get Dictionary Value → key: [KEY] in [HealthData]</div>
 </div>
+<div class="action-block">
+<div class="action-label">Step B (convert to number)</div>
+<div class="action-content">Number → [Dictionary Value]</div>
+<div class="action-detail">Search "Number" (under Calculator). Tap the field → variable button → select Dictionary Value from Step A. This converts text to a number so "is greater than" works.</div>
+</div>
 <div class="action-block orange">
-<div class="action-label orange">Step B</div>
-<div class="action-content">If [Dictionary Value] is greater than 0</div>
+<div class="action-label orange">Step C</div>
+<div class="action-content">If [Number] is greater than 0</div>
+<div class="action-detail">The input must show "Number" (from Step B), NOT "Dictionary Value". Then you'll see "is greater than" as an option.</div>
 </div>
 <div class="action-block green">
-<div class="action-label green">Step C (inside If)</div>
-<div class="action-content">Log Health Sample → Type: [TYPE] → Value: [Dictionary Value] → Unit: [UNIT]</div>
+<div class="action-label green">Step D (inside If)</div>
+<div class="action-content">Log Health Sample → Type: [TYPE] → Value: [Number] → Unit: [UNIT] → Date: Current Date</div>
+<div class="action-detail">⚠️ For Value, select the "Number" variable (from Step B), not Dictionary Value.</div>
 </div>
 <div class="note">💡 Each "If" automatically adds "Otherwise" and "End If" — leave those empty</div>
 </div>
 
 <div class="repeat-block">
 <div class="repeat-title">1️⃣ Calories</div>
-<b>Get Dictionary Value:</b> key = <code>dietaryCalories</code> in HealthData<br>
-<b>If:</b> greater than 0<br>
-<b>Log Health Sample:</b> Type = <b>Dietary Energy</b> · Unit = <b>kcal</b> · Value = Dictionary Value · Date = Current Date
+<b>A.</b> Get Dictionary Value: key = <code>dietaryCalories</code> in HealthData<br>
+<b>B.</b> Number → [Dictionary Value]<br>
+<b>C.</b> If [Number] is greater than 0<br>
+<b>D.</b> Log Health Sample: Type = <b>Dietary Energy</b> · Unit = <b>kcal</b> · Value = <b>[Number]</b> · Date = Current Date
 <label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
 </div>
 
 <div class="repeat-block">
 <div class="repeat-title">2️⃣ Protein</div>
-<b>Get Dictionary Value:</b> key = <code>dietaryProtein</code> in HealthData<br>
-<b>If:</b> greater than 0<br>
-<b>Log Health Sample:</b> Type = <b>Protein</b> · Unit = <b>g</b> · Value = Dictionary Value · Date = Current Date
+<b>A.</b> Get Dictionary Value: key = <code>dietaryProtein</code> in HealthData<br>
+<b>B.</b> Number → [Dictionary Value]<br>
+<b>C.</b> If [Number] is greater than 0<br>
+<b>D.</b> Log Health Sample: Type = <b>Protein</b> · Unit = <b>g</b> · Value = <b>[Number]</b> · Date = Current Date
 <label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
 </div>
 
 <div class="repeat-block">
 <div class="repeat-title">3️⃣ Carbs</div>
-<b>Get Dictionary Value:</b> key = <code>dietaryCarbs</code> in HealthData<br>
-<b>If:</b> greater than 0<br>
-<b>Log Health Sample:</b> Type = <b>Carbohydrates</b> · Unit = <b>g</b> · Value = Dictionary Value · Date = Current Date
+<b>A.</b> Get Dictionary Value: key = <code>dietaryCarbs</code> in HealthData<br>
+<b>B.</b> Number → [Dictionary Value]<br>
+<b>C.</b> If [Number] is greater than 0<br>
+<b>D.</b> Log Health Sample: Type = <b>Carbohydrates</b> · Unit = <b>g</b> · Value = <b>[Number]</b> · Date = Current Date
 <label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
 </div>
 
 <div class="repeat-block">
 <div class="repeat-title">4️⃣ Fat</div>
-<b>Get Dictionary Value:</b> key = <code>dietaryFat</code> in HealthData<br>
-<b>If:</b> greater than 0<br>
-<b>Log Health Sample:</b> Type = <b>Total Fat</b> · Unit = <b>g</b> · Value = Dictionary Value · Date = Current Date
+<b>A.</b> Get Dictionary Value: key = <code>dietaryFat</code> in HealthData<br>
+<b>B.</b> Number → [Dictionary Value]<br>
+<b>C.</b> If [Number] is greater than 0<br>
+<b>D.</b> Log Health Sample: Type = <b>Total Fat</b> · Unit = <b>g</b> · Value = <b>[Number]</b> · Date = Current Date
 <label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
 </div>
 
 <div class="repeat-block">
 <div class="repeat-title">5️⃣ Active Energy (Workout)</div>
-<b>Get Dictionary Value:</b> key = <code>activeEnergy</code> in HealthData<br>
-<b>If:</b> greater than 0<br>
-<b>Log Health Sample:</b> Type = <b>Active Energy</b> · Unit = <b>kcal</b> · Value = Dictionary Value · Date = Current Date
+<b>A.</b> Get Dictionary Value: key = <code>activeEnergy</code> in HealthData<br>
+<b>B.</b> Number → [Dictionary Value]<br>
+<b>C.</b> If [Number] is greater than 0<br>
+<b>D.</b> Log Health Sample: Type = <b>Active Energy</b> · Unit = <b>kcal</b> · Value = <b>[Number]</b> · Date = Current Date
 <label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
 </div>
 
 <div class="repeat-block">
 <div class="repeat-title">6️⃣ Body Weight</div>
-<b>Get Dictionary Value:</b> key = <code>bodyMass</code> in HealthData<br>
-<b>If:</b> greater than 0<br>
-<b>Log Health Sample:</b> Type = <b>Body Mass</b> · Unit = <b>kg</b> · Value = Dictionary Value · Date = Current Date
+<b>A.</b> Get Dictionary Value: key = <code>bodyMass</code> in HealthData<br>
+<b>B.</b> Number → [Dictionary Value]<br>
+<b>C.</b> If [Number] is greater than 0<br>
+<b>D.</b> Log Health Sample: Type = <b>Body Mass</b> · Unit = <b>kg</b> · Value = <b>[Number]</b> · Date = Current Date
 <label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
 </div>
 
 <div class="repeat-block">
 <div class="repeat-title">7️⃣ Water</div>
-<b>Get Dictionary Value:</b> key = <code>waterMl</code> in HealthData<br>
-<b>If:</b> greater than 0<br>
-<b>Log Health Sample:</b> Type = <b>Water</b> · Unit = <b>mL</b> · Value = Dictionary Value · Date = Current Date
+<b>A.</b> Get Dictionary Value: key = <code>waterMl</code> in HealthData<br>
+<b>B.</b> Number → [Dictionary Value]<br>
+<b>C.</b> If [Number] is greater than 0<br>
+<b>D.</b> Log Health Sample: Type = <b>Water</b> · Unit = <b>mL</b> · Value = <b>[Number]</b> · Date = Current Date
 <label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
 </div>
 
@@ -293,7 +307,8 @@ Then check: <b>Health app</b> → <b>Browse</b> → <b>Nutrition</b> → you sho
 <div class="card" style="background:linear-gradient(135deg,#34c759,#30d158);color:#fff;text-align:center;padding:30px">
 <div style="font-size:48px;margin-bottom:10px">🎉</div>
 <div style="font-size:22px;font-weight:800">All Done!</div>
-<div style="font-size:15px;opacity:0.9;margin-top:8px">Your diet data will sync to Apple Health every night at 9 PM</div>
+<div style="font-size:15px;opacity:0.9;margin-top:8px">Your shortcut has 35 actions (7 setup + 7×4 health types + 1 notification)</div>
+<div style="font-size:13px;opacity:0.75;margin-top:8px">Diet data will sync to Apple Health every night at 9 PM</div>
 </div>
 
 <!-- Quick Reference -->
