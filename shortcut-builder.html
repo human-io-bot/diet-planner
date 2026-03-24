@@ -218,7 +218,7 @@ Each mini shortcut has <b>only 5 actions</b> with <b>one single value</b>, so th
 <div class="mini-card">
 <div class="mini-header">
 <div class="mini-icon" style="background:#f5f3ff">⚖️</div>
-<div><div class="mini-name">Shortcut 6: Sync Weight</div><div class="mini-sub">Logs body weight in kg</div></div>
+<div><div class="mini-name">Shortcut 6: Sync Weight</div><div class="mini-sub">Logs body weight in kg (only if logged that day)</div></div>
 </div>
 <div class="mini-steps">
 <b>1.</b> New shortcut → name: <b>"Health - Weight"</b><br>
@@ -228,9 +228,12 @@ Each mini shortcut has <b>only 5 actions</b> with <b>one single value</b>, so th
 <button class="copy-btn" onclick="copyField('url-wt')">Copy URL</button>
 <div class="mini-steps" style="margin-top:12px">
 <b>5.</b> Number → [Contents of URL]<br>
-<b>6.</b> Log Health Sample → Type: <b>Body Mass</b> · Unit: <b>kg</b> · Value: <b>[Number]</b> · Date: <b>[Current Date]</b>
+<b>6.</b> <span style="color:#ff9500;font-weight:800">If</span> → [Number] <b>is greater than</b> 0<br>
+<b>7.</b> <span style="color:#34c759;font-weight:800">(inside If)</span> Log Health Sample → Type: <b>Body Mass</b> · Unit: <b>kg</b> · Value: <b>[Number]</b> · Date: <b>[Current Date]</b><br>
+<span style="color:#999">Otherwise — leave empty</span><br>
+<span style="color:#999">End If</span>
 </div>
-<div class="note">⚠️ Only logs if you entered weight in the Weight tab that day. Returns 0 if no weight logged (won't write to Health).</div>
+<div class="note">⚠️ The If check prevents logging 0 kg to Health on days you didn't weigh in. The Log action must be INSIDE the If block (indented between If and Otherwise).</div>
 <label class="check"><input type="checkbox" onchange="updateProgress()"> Built & tested</label>
 </div>
 
@@ -238,7 +241,7 @@ Each mini shortcut has <b>only 5 actions</b> with <b>one single value</b>, so th
 <div class="mini-card">
 <div class="mini-header">
 <div class="mini-icon" style="background:#ecfdf5">💧</div>
-<div><div class="mini-name">Shortcut 7: Sync Water</div><div class="mini-sub">Logs water intake in mL</div></div>
+<div><div class="mini-name">Shortcut 7: Sync Water</div><div class="mini-sub">Logs water intake in mL (only if logged that day)</div></div>
 </div>
 <div class="mini-steps">
 <b>1.</b> New shortcut → name: <b>"Health - Water"</b><br>
@@ -248,8 +251,12 @@ Each mini shortcut has <b>only 5 actions</b> with <b>one single value</b>, so th
 <button class="copy-btn" onclick="copyField('url-water')">Copy URL</button>
 <div class="mini-steps" style="margin-top:12px">
 <b>5.</b> Number → [Contents of URL]<br>
-<b>6.</b> Log Health Sample → Type: <b>Water</b> · Unit: <b>mL</b> · Value: <b>[Number]</b> · Date: <b>[Current Date]</b>
+<b>6.</b> <span style="color:#ff9500;font-weight:800">If</span> → [Number] <b>is greater than</b> 0<br>
+<b>7.</b> <span style="color:#34c759;font-weight:800">(inside If)</span> Log Health Sample → Type: <b>Water</b> · Unit: <b>mL</b> · Value: <b>[Number]</b> · Date: <b>[Current Date]</b><br>
+<span style="color:#999">Otherwise — leave empty</span><br>
+<span style="color:#999">End If</span>
 </div>
+<div class="note">⚠️ Same as Weight — the If check skips logging if no water intake was recorded that day.</div>
 <label class="check"><input type="checkbox" onchange="updateProgress()"> Built & tested</label>
 </div>
 
