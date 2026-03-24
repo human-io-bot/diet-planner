@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>Shortcut Builder</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;background:#f2f2f7;padding:16px 16px 100px;font-size:16px;color:#1c1c1e}
+h1{font-size:24px;font-weight:800;text-align:center;margin-bottom:4px}
+.sub{text-align:center;color:#666;font-size:14px;margin-bottom:20px}
+.card{background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.step-num{display:inline-block;background:#007aff;color:#fff;font-size:13px;font-weight:800;padding:3px 10px;border-radius:20px;margin-bottom:8px}
+.step-title{font-size:18px;font-weight:700;margin-bottom:8px}
+.step-body{font-size:15px;color:#444;line-height:1.6}
+.action-block{background:#f0f0f5;border-radius:12px;padding:14px;margin:10px 0;border-left:4px solid #007aff}
+.action-block.green{border-left-color:#34c759}
+.action-block.orange{border-left-color:#ff9500}
+.action-block.red{border-left-color:#ff3b30}
+.action-block.purple{border-left-color:#af52de}
+.action-label{font-size:13px;font-weight:700;color:#007aff;text-transform:uppercase;margin-bottom:4px}
+.action-label.green{color:#34c759}
+.action-label.orange{color:#ff9500}
+.action-label.red{color:#ff3b30}
+.action-label.purple{color:#af52de}
+.action-content{font-size:15px;font-weight:600;color:#1c1c1e}
+.action-detail{font-size:13px;color:#666;margin-top:4px}
+.url-box{background:#1c1c1e;color:#4fd14b;font-size:13px;padding:14px;border-radius:10px;margin:10px 0;word-break:break-all;font-family:menlo,monospace;line-height:1.6;position:relative}
+.copy-btn{position:absolute;top:8px;right:8px;background:#333;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer}
+.copy-btn.done{background:#34c759}
+input[type=text]{width:100%;padding:14px;border:1px solid #d1d1d6;border-radius:12px;font-size:16px;margin:8px 0}
+.note{background:#fffbeb;border-radius:10px;padding:12px;font-size:13px;color:#92400e;margin:10px 0;border:1px solid #fde68a}
+.warn{background:#fef2f2;border-radius:10px;padding:12px;font-size:13px;color:#dc2626;margin:10px 0;border:1px solid #fca5a5}
+.done-badge{display:inline-block;background:#34c759;color:#fff;font-size:12px;font-weight:700;padding:2px 8px;border-radius:8px;margin-left:8px}
+.check{cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 0;font-size:15px}
+.check input{width:22px;height:22px;accent-color:#34c759}
+.progress{background:#e5e5ea;height:8px;border-radius:4px;margin:12px 0;overflow:hidden;position:sticky;top:0;z-index:10}
+.progress-fill{background:linear-gradient(90deg,#007aff,#34c759);height:100%;border-radius:4px;transition:width 0.3s}
+.section-header{background:linear-gradient(135deg,#1e3a5f,#2d6a4f);color:#fff;border-radius:16px;padding:20px;margin-bottom:14px;text-align:center}
+.section-header h2{font-size:18px;font-weight:800}
+.section-header p{font-size:13px;opacity:0.85;margin-top:4px}
+.open-shortcuts{display:block;width:100%;padding:18px;border:none;border-radius:14px;background:#007aff;color:#fff;font-size:18px;font-weight:800;cursor:pointer;text-align:center;margin:12px 0}
+.repeat-block{background:#f5f3ff;border-radius:12px;padding:16px;margin:12px 0;border:2px solid #c4b5fd}
+.repeat-title{font-size:14px;font-weight:700;color:#7c3aed;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<h1>🔧 Shortcut Builder</h1>
+<p class="sub">Build your Apple Health sync shortcut step by step</p>
+
+<div class="progress" id="progressBar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+<!-- Config -->
+<div class="card">
+<div class="step-title">⚙️ First: Enter your details</div>
+<div class="step-body">
+<label style="font-size:14px;font-weight:600;color:#666">Your API URL:</label>
+<input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec" oninput="buildUrl()">
+<label style="font-size:14px;font-weight:600;color:#666">Your API Key:</label>
+<input type="text" id="apiKey" placeholder="Your secret password" oninput="buildUrl()">
+<div class="step-body" style="margin-top:12px;font-size:14px">Your generated URL:</div>
+<div class="url-box" id="fullUrl">Enter details above...</div>
+<button class="copy-btn" id="copyUrlBtn" onclick="copyUrl()">Copy URL</button>
+</div>
+</div>
+
+<button class="open-shortcuts" onclick="window.location.href='shortcuts://create-shortcut'">📱 Open Shortcuts App</button>
+
+<!-- Steps -->
+<div class="section-header"><h2>Part A: Setup</h2><p>Create shortcut and format the date</p></div>
+
+<div class="card">
+<span class="step-num">1</span>
+<div class="step-title">Create New Shortcut</div>
+<div class="step-body">
+In Shortcuts app: tap <b>+</b> → name it <b>"Sync Diet to Health"</b>
+</div>
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="card">
+<span class="step-num">2</span>
+<div class="step-title">Add: Current Date</div>
+<div class="step-body">
+Tap <b>Add Action</b> → search <b>"Current Date"</b> → tap it
+</div>
+<div class="action-block">
+<div class="action-label">Calendar</div>
+<div class="action-content">📅 Current Date</div>
+</div>
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="card">
+<span class="step-num">3</span>
+<div class="step-title">Add: Format Date</div>
+<div class="step-body">
+<b>Add Action</b> → search <b>"Format Date"</b> → tap it<br>
+• Input: <b>Current Date</b><br>
+• Date Format: tap → <b>Custom</b> → type exactly: <b>yyyy-MM-dd</b>
+</div>
+<div class="action-block orange">
+<div class="action-label orange">Format</div>
+<div class="action-content">Format [Current Date] → Custom: yyyy-MM-dd</div>
+<div class="action-detail">This converts "March 23, 2026" to "2026-03-23"</div>
+</div>
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="card">
+<span class="step-num">4</span>
+<div class="step-title">Add: Text (build URL)</div>
+<div class="step-body">
+<b>Add Action</b> → search <b>"Text"</b> → tap the plain <b>Text</b> action<br><br>
+<b>Important:</b> Tap the "Copy URL" button above, then paste into the Text field. Then:<br>
+1. Position cursor at the END (after <code>date=</code>)<br>
+2. Tap the <b>variable button</b> above keyboard<br>
+3. Select <b>Formatted Date</b>
+</div>
+<div class="action-block">
+<div class="action-label">Text</div>
+<div class="action-content">https://script...?action=getHealthExport&key=...&date=<span style="background:#007aff;color:#fff;padding:2px 8px;border-radius:6px;font-size:12px">Formatted Date</span></div>
+</div>
+<div class="note">💡 The blue pill "Formatted Date" should appear right after &date= with no spaces</div>
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="card">
+<span class="step-num">5</span>
+<div class="step-title">Add: Get Contents of URL</div>
+<div class="step-body">
+<b>Add Action</b> → search <b>"Get Contents of URL"</b> → tap it<br>
+• URL: tap the field → <b>Clear</b> it → tap variable button → select <b>Text</b> (from step 4)<br>
+• Expand (tap arrow) → Method: <b>GET</b>
+</div>
+<div class="action-block green">
+<div class="action-label green">Network</div>
+<div class="action-content">Get contents of [Text]</div>
+<div class="action-detail">Method: GET | Headers: empty | Body: empty</div>
+</div>
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="card">
+<span class="step-num">6</span>
+<div class="step-title">Add: Get Dictionary Value → "shortcuts"</div>
+<div class="step-body">
+<b>Add Action</b> → search <b>"Get Dictionary Value"</b><br>
+• Get: <b>Value</b><br>
+• Key: type <b>shortcuts</b><br>
+• In: <b>Contents of URL</b>
+</div>
+<div class="action-block purple">
+<div class="action-label purple">Dictionary</div>
+<div class="action-content">Get Value for "shortcuts" in [Contents of URL]</div>
+</div>
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="card">
+<span class="step-num">7</span>
+<div class="step-title">Add: Set Variable → "HealthData"</div>
+<div class="step-body">
+<b>Add Action</b> → search <b>"Set Variable"</b><br>
+• Name: type <b>HealthData</b><br>
+• Input: <b>Dictionary Value</b> (auto-linked)
+</div>
+<div class="action-block purple">
+<div class="action-label purple">Variable</div>
+<div class="action-content">Set [HealthData] to [Dictionary Value]</div>
+</div>
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="section-header"><h2>Part B: Log Health Data</h2><p>Repeat this pattern 7 times — one for each health type</p></div>
+
+<div class="card">
+<div class="step-title">🔁 The Pattern (repeat for each type below)</div>
+<div class="step-body">Each health metric follows the same 3-action pattern:</div>
+<div class="action-block">
+<div class="action-label">Step A</div>
+<div class="action-content">Get Dictionary Value → key: [KEY] in [HealthData]</div>
+</div>
+<div class="action-block orange">
+<div class="action-label orange">Step B</div>
+<div class="action-content">If [Dictionary Value] is greater than 0</div>
+</div>
+<div class="action-block green">
+<div class="action-label green">Step C (inside If)</div>
+<div class="action-content">Log Health Sample → Type: [TYPE] → Value: [Dictionary Value] → Unit: [UNIT]</div>
+</div>
+<div class="note">💡 Each "If" automatically adds "Otherwise" and "End If" — leave those empty</div>
+</div>
+
+<div class="repeat-block">
+<div class="repeat-title">1️⃣ Calories</div>
+<b>Get Dictionary Value:</b> key = <code>dietaryCalories</code> in HealthData<br>
+<b>If:</b> greater than 0<br>
+<b>Log Health Sample:</b> Type = <b>Dietary Energy</b> · Unit = <b>kcal</b> · Value = Dictionary Value · Date = Current Date
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="repeat-block">
+<div class="repeat-title">2️⃣ Protein</div>
+<b>Get Dictionary Value:</b> key = <code>dietaryProtein</code> in HealthData<br>
+<b>If:</b> greater than 0<br>
+<b>Log Health Sample:</b> Type = <b>Protein</b> · Unit = <b>g</b> · Value = Dictionary Value · Date = Current Date
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="repeat-block">
+<div class="repeat-title">3️⃣ Carbs</div>
+<b>Get Dictionary Value:</b> key = <code>dietaryCarbs</code> in HealthData<br>
+<b>If:</b> greater than 0<br>
+<b>Log Health Sample:</b> Type = <b>Carbohydrates</b> · Unit = <b>g</b> · Value = Dictionary Value · Date = Current Date
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="repeat-block">
+<div class="repeat-title">4️⃣ Fat</div>
+<b>Get Dictionary Value:</b> key = <code>dietaryFat</code> in HealthData<br>
+<b>If:</b> greater than 0<br>
+<b>Log Health Sample:</b> Type = <b>Total Fat</b> · Unit = <b>g</b> · Value = Dictionary Value · Date = Current Date
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="repeat-block">
+<div class="repeat-title">5️⃣ Active Energy (Workout)</div>
+<b>Get Dictionary Value:</b> key = <code>activeEnergy</code> in HealthData<br>
+<b>If:</b> greater than 0<br>
+<b>Log Health Sample:</b> Type = <b>Active Energy</b> · Unit = <b>kcal</b> · Value = Dictionary Value · Date = Current Date
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="repeat-block">
+<div class="repeat-title">6️⃣ Body Weight</div>
+<b>Get Dictionary Value:</b> key = <code>bodyMass</code> in HealthData<br>
+<b>If:</b> greater than 0<br>
+<b>Log Health Sample:</b> Type = <b>Body Mass</b> · Unit = <b>kg</b> · Value = Dictionary Value · Date = Current Date
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="repeat-block">
+<div class="repeat-title">7️⃣ Water</div>
+<b>Get Dictionary Value:</b> key = <code>waterMl</code> in HealthData<br>
+<b>If:</b> greater than 0<br>
+<b>Log Health Sample:</b> Type = <b>Water</b> · Unit = <b>mL</b> · Value = Dictionary Value · Date = Current Date
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="section-header"><h2>Part C: Finish</h2><p>Notification + automation</p></div>
+
+<div class="card">
+<span class="step-num">8</span>
+<div class="step-title">Add: Show Notification</div>
+<div class="step-body">
+<b>Add Action</b> → search <b>"Show Notification"</b><br>
+• Title: <b>Health Sync Complete</b><br>
+• Body: <b>Diet data synced to Apple Health</b>
+</div>
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="card">
+<span class="step-num">9</span>
+<div class="step-title">▶ Test It!</div>
+<div class="step-body">
+Tap the <b>Play ▶</b> button at the bottom of Shortcuts.<br><br>
+First time: iOS asks for Health permissions — tap <b>Allow</b> for all types.<br><br>
+Then check: <b>Health app</b> → <b>Browse</b> → <b>Nutrition</b> → you should see today's data!
+</div>
+<div class="warn">⚠️ If you see "There was a problem" — go back to Step 4 and check your URL has no spaces or line breaks</div>
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="card">
+<span class="step-num">10</span>
+<div class="step-title">🤖 Automate (Run Every Night)</div>
+<div class="step-body">
+1. Go to <b>Automation</b> tab in Shortcuts<br>
+2. Tap <b>+</b> → <b>Time of Day</b><br>
+3. Set: <b>9:00 PM</b> · Repeat: <b>Daily</b><br>
+4. Tap <b>Next</b><br>
+5. Tap <b>Run Shortcut</b> → select <b>"Sync Diet to Health"</b><br>
+6. <b>Turn OFF "Ask Before Running"</b><br>
+7. Tap <b>Done</b>
+</div>
+<div class="note">💡 Now it runs silently every night. You never touch it again.</div>
+<label class="check"><input type="checkbox" onchange="updateProgress()"> Done</label>
+</div>
+
+<div class="card" style="background:linear-gradient(135deg,#34c759,#30d158);color:#fff;text-align:center;padding:30px">
+<div style="font-size:48px;margin-bottom:10px">🎉</div>
+<div style="font-size:22px;font-weight:800">All Done!</div>
+<div style="font-size:15px;opacity:0.9;margin-top:8px">Your diet data will sync to Apple Health every night at 9 PM</div>
+</div>
+
+<!-- Quick Reference -->
+<div class="card">
+<div class="step-title">📋 Quick Reference — Dictionary Keys</div>
+<div class="step-body">
+<table style="width:100%;font-size:14px;border-collapse:collapse">
+<tr style="border-bottom:1px solid #eee"><td style="padding:8px"><b>Key</b></td><td><b>Health Type</b></td><td><b>Unit</b></td></tr>
+<tr style="border-bottom:1px solid #eee"><td style="padding:8px"><code>dietaryCalories</code></td><td>Dietary Energy</td><td>kcal</td></tr>
+<tr style="border-bottom:1px solid #eee"><td style="padding:8px"><code>dietaryProtein</code></td><td>Protein</td><td>g</td></tr>
+<tr style="border-bottom:1px solid #eee"><td style="padding:8px"><code>dietaryCarbs</code></td><td>Carbohydrates</td><td>g</td></tr>
+<tr style="border-bottom:1px solid #eee"><td style="padding:8px"><code>dietaryFat</code></td><td>Total Fat</td><td>g</td></tr>
+<tr style="border-bottom:1px solid #eee"><td style="padding:8px"><code>activeEnergy</code></td><td>Active Energy</td><td>kcal</td></tr>
+<tr style="border-bottom:1px solid #eee"><td style="padding:8px"><code>bodyMass</code></td><td>Body Mass</td><td>kg</td></tr>
+<tr><td style="padding:8px"><code>waterMl</code></td><td>Water</td><td>mL</td></tr>
+</table>
+</div>
+</div>
+
+<script>
+function buildUrl(){
+  var url=document.getElementById("apiUrl").value.trim();
+  var key=document.getElementById("apiKey").value.trim();
+  var el=document.getElementById("fullUrl");
+  if(!url||!key){el.textContent="Enter details above...";return}
+  el.textContent=url+"?action=getHealthExport&key="+key+"&date=";
+}
+
+function copyUrl(){
+  var el=document.getElementById("fullUrl");
+  var text=el.textContent;
+  if(text==="Enter details above...")return;
+  navigator.clipboard.writeText(text).then(function(){
+    var btn=document.getElementById("copyUrlBtn");
+    btn.textContent="Copied!";btn.classList.add("done");
+    setTimeout(function(){btn.textContent="Copy URL";btn.classList.remove("done")},2000);
+  });
+}
+
+function updateProgress(){
+  var checks=document.querySelectorAll('input[type=checkbox]');
+  var total=checks.length;
+  var done=0;
+  checks.forEach(function(c){if(c.checked)done++});
+  var pct=Math.round((done/total)*100);
+  document.getElementById("progressFill").style.width=pct+"%";
+}
+</script>
+</body>
+</html>
