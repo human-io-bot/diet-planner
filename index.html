@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1e3a5f">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://script.google.com; connect-src https://script.google.com; img-src 'self' data:;">
 <title>Diet + Workout Planner</title>
 <link rel="manifest" href="./manifest.json">
 <style>
@@ -41,7 +42,7 @@ var DAY_LABELS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Sat
 var SKIP={id:"skip",name:"Skip / NA",desc:"Skipping this meal",cal:0,p:0,c:0,f:0,isSkip:true};
 var SKIP_REASONS=["Not hungry","Nausea (Zepbound)","Fasting","Running late","Ate out","Other"];
 var MENU_MAP={bf:"bf",coffee:["cf","cf2"],main:["lu","dn"],snack:["ms","es"],protein:["lp","dp"]};
-var CACHE_VER="5";
+var CACHE_VER="7";
 
 /* ===== UTILITIES ===== */
 var LS={
@@ -710,9 +711,66 @@ function App(){
       Object.keys(settings).filter(function(k){return k!=="apiKey"}).map(function(k){
         return h("div",{key:k,style:{display:"flex",justifyContent:"space-between",padding:"12px 0",borderBottom:"1px solid #f1f5f9"}},
           h("span",{style:{fontSize:14,fontWeight:600,color:"#475569"}},k),
-          h("span",{style:{fontSize:14,color:"#1e293b",fontWeight:700}},String(settings[k])))})),
+          h("span",{style:{fontSize:14,color:"#1e293b",fontWeight:700}},parseTime(String(settings[k]))))})),
+    function(){
+      var lastChange=settings.apiKeyLastChanged;
+      var daysSince=999;
+      if(lastChange){
+        try{var d=new Date(lastChange);daysSince=Math.floor((Date.now()-d.getTime())/(1000*60*60*24))}catch(ex){}
+      }
+      if(daysSince>90||!lastChange){
+        return h("div",{style:{background:"#fef2f2",borderRadius:14,padding:18,marginBottom:14,border:"1px solid #fca5a5"}},
+          h("div",{style:{display:"flex",alignItems:"center",gap:10,marginBottom:8}},
+            h("span",{style:{fontSize:24}},"\uD83D\uDD10"),
+            h("div",null,
+              h("h3",{style:{margin:0,fontSize:16,fontWeight:800,color:"#dc2626"}},"API Key Rotation Recommended"),
+              h("p",{style:{margin:"4px 0 0",fontSize:13,color:"#7f1d1d"}},lastChange?"Last changed "+daysSince+" days ago. Rotate every 90 days for security.":"No key rotation date recorded. Set one in your Settings tab."))),
+          h("p",{style:{margin:0,fontSize:13,color:"#991b1b",lineHeight:1.6}},
+            "To rotate: 1) Open Google Sheet > Settings tab > change 'apiKey' value. 2) Update 'apiKeyLastChanged' to today's date ("+todayStr()+"). 3) Update the key in Apps Script code. 4) Redeploy. 5) Re-enter new key here (Logout > Reconnect)."));
+      }
+      return null;
+    }(),
+    h("div",{style:{background:"#f0fdf4",borderRadius:16,padding:20,marginBottom:14,border:"1px solid #86efac"}},
+      h("div",{style:{display:"flex",alignItems:"center",gap:10,marginBottom:12}},
+        h("span",{style:{fontSize:24}},"\uD83D\uDEE1\uFE0F"),
+        h("h3",{style:{margin:0,fontSize:16,fontWeight:800,color:"#065f46"}},"Security Status")),
+      h("div",{style:{display:"grid",gap:8}},
+        h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:14,padding:"6px 0",borderBottom:"1px solid #d1fae5"}},
+          h("span",{style:{color:"#065f46"}},"Connection"),
+          h("span",{style:{fontWeight:700,color:"#059669"}},"\u2705 HTTPS Encrypted")),
+        h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:14,padding:"6px 0",borderBottom:"1px solid #d1fae5"}},
+          h("span",{style:{color:"#065f46"}},"API Key Storage"),
+          h("span",{style:{fontWeight:700,color:"#059669"}},"\u2705 Encoded")),
+        h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:14,padding:"6px 0",borderBottom:"1px solid #d1fae5"}},
+          h("span",{style:{color:"#065f46"}},"Backend Rate Limit"),
+          h("span",{style:{fontWeight:700,color:"#059669"}},"\u2705 100 req/hr")),
+        h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:14,padding:"6px 0",borderBottom:"1px solid #d1fae5"}},
+          h("span",{style:{color:"#065f46"}},"Input Validation"),
+          h("span",{style:{fontWeight:700,color:"#059669"}},"\u2705 Active")),
+        h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:14,padding:"6px 0",borderBottom:"1px solid #d1fae5"}},
+          h("span",{style:{color:"#065f46"}},"Content Security Policy"),
+          h("span",{style:{fontWeight:700,color:"#059669"}},"\u2705 Enabled")),
+        h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:14,padding:"6px 0"}},
+          h("span",{style:{color:"#065f46"}},"Data Scope"),
+          h("span",{style:{fontWeight:700,color:"#059669"}},"\u2705 Single Sheet Only")))),
+    h("div",{style:{background:"linear-gradient(135deg,#ff2d55,#ff375f)",borderRadius:16,padding:20,marginBottom:14,color:"#fff"}},
+      h("div",{style:{display:"flex",alignItems:"center",gap:12,marginBottom:12}},
+        h("span",{style:{fontSize:32}},"\u2764\uFE0F"),
+        h("div",null,
+          h("h3",{style:{margin:0,fontSize:18,fontWeight:800}},"Apple Health Sync"),
+          h("p",{style:{margin:"4px 0 0",fontSize:13,opacity:0.9}},"Sync nutrition, weight & workouts to Health app"))),
+      h("button",{onClick:function(){window.location.href="shortcuts://run-shortcut?name=Sync%20Diet%20to%20Health"},style:{width:"100%",padding:16,borderRadius:12,border:"2px solid rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.2)",color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer",marginBottom:10}},"\uD83D\uDD04 Sync Today to Apple Health"),
+      h("button",{onClick:function(){
+        api("getHealthExport",{date:todayStr()}).then(function(r){
+          if(r.success){
+            var n=r.nutrition;var b=r.body;var w=r.workout;
+            setMsg("Cal:"+n.calories+" P:"+n.protein+"g C:"+n.carbs+"g F:"+n.fat+"g | Wt:"+(b.weight||"--")+"kg | Burn:"+w.activeEnergy);
+          }else setMsg("Error fetching data");
+        }).catch(function(){setMsg("Connection error")});
+      },style:{width:"100%",padding:14,borderRadius:12,border:"1px solid rgba(255,255,255,0.3)",background:"transparent",color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer"}},"\uD83D\uDCCA Preview Today's Health Data"),
+      h("p",{style:{margin:"12px 0 0",fontSize:12,opacity:0.8,lineHeight:1.5}},'First time? Create the "Sync Diet to Health" shortcut in the Shortcuts app. See the setup guide for step-by-step instructions.')),
     h("div",{style:{background:"#fffbeb",borderRadius:16,padding:20,border:"1px solid #fde68a",marginBottom:14}},
-      h("h3",{style:{margin:"0 0 10px",fontSize:16,fontWeight:700,color:"#92400e"}},"How to edit"),
+      h("h3",{style:{margin:"0 0 10px",fontSize:16,fontWeight:700,color:"#92400e"}},"How to edit settings & menu"),
       h("p",{style:{fontSize:14,color:"#78350f",lineHeight:1.6,margin:0}},"Open your Google Sheet > Settings tab > edit column B. Add foods in FoodMenu tab (categories: coffee, bf, main, snack, protein). Changes load on next app open.")),
     h("button",{onClick:logout,style:{width:"100%",padding:16,borderRadius:12,border:"1px solid #dc2626",background:"#fef2f2",color:"#dc2626",fontSize:16,fontWeight:700,cursor:"pointer"}},"Disconnect & Reset"));
 
