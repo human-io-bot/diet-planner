@@ -6,7 +6,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1e3a5f">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://*.google.com https://*.googleusercontent.com; connect-src https://*.google.com https://*.googleusercontent.com; img-src 'self' data:;">
 <title>Diet + Workout Planner</title>
 <link rel="manifest" href="./manifest.json">
 <style>
@@ -42,7 +41,7 @@ var DAY_LABELS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Sat
 var SKIP={id:"skip",name:"Skip / NA",desc:"Skipping this meal",cal:0,p:0,c:0,f:0,isSkip:true};
 var SKIP_REASONS=["Not hungry","Nausea (Zepbound)","Fasting","Running late","Ate out","Other"];
 var MENU_MAP={bf:"bf",coffee:["cf","cf2"],main:["lu","dn"],snack:["ms","es"],protein:["lp","dp"]};
-var CACHE_VER="7";
+var CACHE_VER="8";
 
 /* ===== UTILITIES ===== */
 var LS={
@@ -749,7 +748,7 @@ function App(){
           h("span",{style:{fontWeight:700,color:"#059669"}},"\u2705 Active")),
         h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:14,padding:"6px 0",borderBottom:"1px solid #d1fae5"}},
           h("span",{style:{color:"#065f46"}},"Content Security Policy"),
-          h("span",{style:{fontWeight:700,color:"#059669"}},"\u2705 Enabled")),
+          h("span",{style:{fontWeight:700,color:"#d97706"}},"\u26A0\uFE0F Not compatible with Google Apps Script")),
         h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:14,padding:"6px 0"}},
           h("span",{style:{color:"#065f46"}},"Data Scope"),
           h("span",{style:{fontWeight:700,color:"#059669"}},"\u2705 Single Sheet Only")))),
