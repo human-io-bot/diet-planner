@@ -5,9 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-title" content="NAV.WINS">
+<meta name="theme-color" content="#0A84FF">
 <title>NAV.WINS</title>
 <link rel="manifest" href="./manifest.json">
+<link id="apple-touch-icon" rel="apple-touch-icon" sizes="180x180">
+<link id="favicon" rel="icon" type="image/png" sizes="32x32">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,'SF Pro Display','SF Pro Text','Segoe UI',system-ui,sans-serif;background:#f2f2f7;-webkit-font-smoothing:antialiased;font-size:16px}
@@ -16,6 +19,72 @@ input[type=range]{-webkit-appearance:none;height:8px;border-radius:4px;backgroun
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#0A84FF;cursor:pointer;box-shadow:0 2px 6px rgba(10,132,255,0.35)}
 .card{background:#fff;border-radius:20px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06)}
 </style>
+<script>
+(function(){
+  function drawNavIcon(sz){
+    var cv=document.createElement("canvas");
+    cv.width=sz;cv.height=sz;
+    var ctx=cv.getContext("2d");
+    var c=sz/2,rx=sz*0.23;
+    // squircle clip
+    ctx.beginPath();
+    ctx.moveTo(rx,0);ctx.lineTo(sz-rx,0);ctx.quadraticCurveTo(sz,0,sz,rx);
+    ctx.lineTo(sz,sz-rx);ctx.quadraticCurveTo(sz,sz,sz-rx,sz);
+    ctx.lineTo(rx,sz);ctx.quadraticCurveTo(0,sz,0,sz-rx);
+    ctx.lineTo(0,rx);ctx.quadraticCurveTo(0,0,rx,0);
+    ctx.closePath();ctx.clip();
+    // gradient bg
+    var g=ctx.createLinearGradient(0,0,sz,sz);
+    g.addColorStop(0,"#0A84FF");g.addColorStop(1,"#30D158");
+    ctx.fillStyle=g;ctx.fillRect(0,0,sz,sz);
+    // inner gloss
+    var gl=ctx.createRadialGradient(c,sz*0.18,0,c,sz*0.18,sz*0.6);
+    gl.addColorStop(0,"rgba(255,255,255,0.15)");gl.addColorStop(1,"rgba(255,255,255,0)");
+    ctx.fillStyle=gl;ctx.fillRect(0,0,sz,sz);
+    // compass outer ring
+    ctx.beginPath();ctx.arc(c,c,sz*0.36,0,Math.PI*2);
+    ctx.strokeStyle="rgba(255,255,255,0.22)";ctx.lineWidth=sz*0.025;ctx.stroke();
+    // tick marks N/S/E/W
+    [[-Math.PI/2,sz*0.06,sz*0.025,0.7],[Math.PI/2,sz*0.04,sz*0.018,0.25],[0,sz*0.04,sz*0.018,0.25],[Math.PI,sz*0.04,sz*0.018,0.25]].forEach(function(t){
+      var r=sz*0.36;
+      ctx.beginPath();
+      ctx.moveTo(c+Math.cos(t[0])*r,c+Math.sin(t[0])*r);
+      ctx.lineTo(c+Math.cos(t[0])*(r-t[1]),c+Math.sin(t[0])*(r-t[1]));
+      ctx.strokeStyle="rgba(255,255,255,"+t[3]+")";ctx.lineWidth=t[2];ctx.lineCap="round";ctx.stroke();
+    });
+    // N label
+    ctx.font="bold "+Math.round(sz*0.1)+"px -apple-system,sans-serif";
+    ctx.fillStyle="rgba(255,255,255,0.9)";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText("N",c,c-sz*0.29);
+    // compass needle north (white kite)
+    var tipY=c-sz*0.14,baseY=c+sz*0.02,midY=c+sz*0.015,hw=sz*0.045;
+    ctx.beginPath();ctx.moveTo(c,tipY);ctx.lineTo(c-hw,baseY);ctx.lineTo(c,midY);ctx.lineTo(c+hw,baseY);ctx.closePath();
+    ctx.fillStyle="rgba(255,255,255,0.95)";ctx.fill();
+    // south needle (dim)
+    ctx.beginPath();ctx.moveTo(c,midY);ctx.lineTo(c-hw,baseY);ctx.lineTo(c,c+sz*0.26);ctx.lineTo(c+hw,baseY);ctx.closePath();
+    ctx.fillStyle="rgba(255,255,255,0.2)";ctx.fill();
+    // pivot dot
+    ctx.beginPath();ctx.arc(c,baseY,sz*0.032,0,Math.PI*2);
+    ctx.fillStyle="rgba(255,255,255,0.45)";ctx.fill();
+    // WIN badge circle at north tip
+    var bY=c-sz*0.31,bR=sz*0.12;
+    ctx.beginPath();ctx.arc(c,bY,bR,0,Math.PI*2);
+    ctx.fillStyle="#fff";ctx.fill();
+    // checkmark inside badge
+    var ck=sz*0.07;
+    ctx.beginPath();
+    ctx.moveTo(c-ck*0.6,bY+ck*0.05);
+    ctx.lineTo(c-ck*0.05,bY+ck*0.65);
+    ctx.lineTo(c+ck*0.85,bY-ck*0.55);
+    ctx.strokeStyle="#0A84FF";ctx.lineWidth=sz*0.032;ctx.lineCap="round";ctx.lineJoin="round";ctx.stroke();
+    return cv.toDataURL("image/png");
+  }
+  // inject apple-touch-icon (180px — what iOS reads for Add to Home Screen)
+  document.getElementById("apple-touch-icon").href=drawNavIcon(180);
+  // inject favicon (32px — browser tab)
+  document.getElementById("favicon").href=drawNavIcon(32);
+})();
+</script>
 </head>
 <body>
 <div id="root"></div>
@@ -1050,6 +1119,45 @@ window.onerror=function(msg,src,line){
 
 /* ===== SERVICE WORKER ===== */
 if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("./sw.js").catch(function(){})})}
-</script>
+
+/* ===== DYNAMIC MANIFEST (injects canvas-generated icon into PWA manifest) ===== */
+(function(){
+  function makeIcon(sz){
+    var cv=document.createElement("canvas");cv.width=sz;cv.height=sz;
+    var ctx=cv.getContext("2d");var c=sz/2,rx=sz*0.23;
+    ctx.beginPath();ctx.moveTo(rx,0);ctx.lineTo(sz-rx,0);ctx.quadraticCurveTo(sz,0,sz,rx);ctx.lineTo(sz,sz-rx);ctx.quadraticCurveTo(sz,sz,sz-rx,sz);ctx.lineTo(rx,sz);ctx.quadraticCurveTo(0,sz,0,sz-rx);ctx.lineTo(0,rx);ctx.quadraticCurveTo(0,0,rx,0);ctx.closePath();ctx.clip();
+    var g=ctx.createLinearGradient(0,0,sz,sz);g.addColorStop(0,"#0A84FF");g.addColorStop(1,"#30D158");ctx.fillStyle=g;ctx.fillRect(0,0,sz,sz);
+    var gl=ctx.createRadialGradient(c,sz*0.18,0,c,sz*0.18,sz*0.6);gl.addColorStop(0,"rgba(255,255,255,0.15)");gl.addColorStop(1,"rgba(255,255,255,0)");ctx.fillStyle=gl;ctx.fillRect(0,0,sz,sz);
+    ctx.beginPath();ctx.arc(c,c,sz*0.36,0,Math.PI*2);ctx.strokeStyle="rgba(255,255,255,0.22)";ctx.lineWidth=sz*0.025;ctx.stroke();
+    [[-Math.PI/2,sz*0.06,sz*0.025,0.7],[Math.PI/2,sz*0.04,sz*0.018,0.25],[0,sz*0.04,sz*0.018,0.25],[Math.PI,sz*0.04,sz*0.018,0.25]].forEach(function(t){var r=sz*0.36;ctx.beginPath();ctx.moveTo(c+Math.cos(t[0])*r,c+Math.sin(t[0])*r);ctx.lineTo(c+Math.cos(t[0])*(r-t[1]),c+Math.sin(t[0])*(r-t[1]));ctx.strokeStyle="rgba(255,255,255,"+t[3]+")";ctx.lineWidth=t[2];ctx.lineCap="round";ctx.stroke();});
+    ctx.font="bold "+Math.round(sz*0.1)+"px -apple-system,sans-serif";ctx.fillStyle="rgba(255,255,255,0.9)";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("N",c,c-sz*0.29);
+    var tipY=c-sz*0.14,baseY=c+sz*0.02,midY=c+sz*0.015,hw=sz*0.045;
+    ctx.beginPath();ctx.moveTo(c,tipY);ctx.lineTo(c-hw,baseY);ctx.lineTo(c,midY);ctx.lineTo(c+hw,baseY);ctx.closePath();ctx.fillStyle="rgba(255,255,255,0.95)";ctx.fill();
+    ctx.beginPath();ctx.moveTo(c,midY);ctx.lineTo(c-hw,baseY);ctx.lineTo(c,c+sz*0.26);ctx.lineTo(c+hw,baseY);ctx.closePath();ctx.fillStyle="rgba(255,255,255,0.2)";ctx.fill();
+    ctx.beginPath();ctx.arc(c,baseY,sz*0.032,0,Math.PI*2);ctx.fillStyle="rgba(255,255,255,0.45)";ctx.fill();
+    var bY=c-sz*0.31,bR=sz*0.12;ctx.beginPath();ctx.arc(c,bY,bR,0,Math.PI*2);ctx.fillStyle="#fff";ctx.fill();
+    var ck=sz*0.07;ctx.beginPath();ctx.moveTo(c-ck*0.6,bY+ck*0.05);ctx.lineTo(c-ck*0.05,bY+ck*0.65);ctx.lineTo(c+ck*0.85,bY-ck*0.55);ctx.strokeStyle="#0A84FF";ctx.lineWidth=sz*0.032;ctx.lineCap="round";ctx.lineJoin="round";ctx.stroke();
+    return cv.toDataURL("image/png");
+  }
+  try{
+    var icon192=makeIcon(192);
+    var icon512=makeIcon(512);
+    var manifest={
+      name:"NAV.WINS",short_name:"NAV.WINS",
+      description:"Navigate Your New Wins — Diet & Workout Tracker",
+      start_url:"./index.html",display:"standalone",
+      background_color:"#f2f2f7",theme_color:"#0A84FF",
+      orientation:"portrait",
+      icons:[
+        {src:icon192,sizes:"192x192",type:"image/png",purpose:"any maskable"},
+        {src:icon512,sizes:"512x512",type:"image/png",purpose:"any maskable"}
+      ]
+    };
+    var blob=new Blob([JSON.stringify(manifest)],{type:"application/json"});
+    var url=URL.createObjectURL(blob);
+    var el=document.querySelector("link[rel='manifest']");
+    if(el)el.href=url;
+  }catch(e){}
+})();</script>
 </body>
 </html>
