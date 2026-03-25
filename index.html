@@ -41,7 +41,7 @@ var DAY_LABELS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Sat
 var SKIP={id:"skip",name:"Skip / NA",desc:"Skipping this meal",cal:0,p:0,c:0,f:0,isSkip:true};
 var SKIP_REASONS=["Not hungry","Nausea (Zepbound)","Fasting","Running late","Ate out","Other"];
 var MENU_MAP={bf:"bf",coffee:["cf","cf2"],main:["lu","dn"],snack:["ms","es"],protein:["lp","dp"]};
-var CACHE_VER="8";
+var CACHE_VER="9";
 
 /* ===== UTILITIES ===== */
 var LS={
@@ -226,13 +226,19 @@ function App(){
   function applyDayData(r){
     var meals={};
     if(r.meals)r.meals.forEach(function(m){
-      if(String(m.skipped).toUpperCase()==="TRUE"){meals[m.slot]={id:"skip",name:"Skip / NA",desc:"Skipped",cal:0,p:0,c:0,f:0,isSkip:true,skipReason:m.skipReason};return}
-      var sl=menu[m.slot]||[];
-      var f=null;
-      for(var i=0;i<sl.length;i++){if(sl[i].id===m.foodId){f=sl[i];break}}
-      var item=f||makeFallback(m);
-      if((m.slot==="lp"||m.slot==="dp")&&Number(item.cal)===0)item=Object.assign({},item,{isVeg:true});
-      meals[m.slot]=item;
+      var item;
+      if(String(m.skipped).toUpperCase()==="TRUE"){
+        item={id:"skip",name:"Skip / NA",desc:"Skipped",cal:0,p:0,c:0,f:0,isSkip:true,skipReason:m.skipReason};
+      }else{
+        var sl=menu[m.slot]||[];
+        var f=null;
+        for(var i=0;i<sl.length;i++){if(sl[i].id===m.foodId){f=sl[i];break}}
+        item=f||makeFallback(m);
+        if((m.slot==="lp"||m.slot==="dp")&&Number(item.cal)===0)item=Object.assign({},item,{isVeg:true});
+      }
+      // Append to array (supports multi-select)
+      if(!meals[m.slot])meals[m.slot]=[];
+      meals[m.slot].push(item);
     });
     setDayMeals(meals);
     if(r.workout){
@@ -319,21 +325,63 @@ function App(){
 
   /* ----- Actions ----- */
   function pickMeal(slot,item){
-    setDayMeals(function(prev){var n=Object.assign({},prev);n[slot]=item;return n});
-    setOpenSlot(null);
-    if(item.isSkip&&slot!=="lp"&&slot!=="dp"&&slot!=="cf"&&slot!=="cf2")setSkipModal(slot);
+    var isCoffee=slot==="cf"||slot==="cf2";
+    var isProtein=slot==="lp"||slot==="dp";
+    
+    // Coffee and protein stay single-select
+    if(isCoffee||isProtein){
+      setDayMeals(function(prev){var n=Object.assign({},prev);n[slot]=[item];return n});
+      setOpenSlot(null);
+      if(item.isSkip&&slot!=="lp"&&slot!=="dp"&&slot!=="cf"&&slot!=="cf2")setSkipModal(slot);
+      return;
+    }
+    
+    // Skip is always single (replaces everything)
+    if(item.isSkip){
+      setDayMeals(function(prev){var n=Object.assign({},prev);n[slot]=[item];return n});
+      setOpenSlot(null);
+      setSkipModal(slot);
+      return;
+    }
+    
+    // Multi-select: toggle item on/off
+    setDayMeals(function(prev){
+      var n=Object.assign({},prev);
+      var current=n[slot]||[];
+      // If current has a skip, clear it first
+      if(current.length===1&&current[0].isSkip)current=[];
+      // Check if item already selected
+      var idx=-1;
+      for(var i=0;i<current.length;i++){if(current[i].id===item.id){idx=i;break}}
+      if(idx>-1){
+        // Deselect
+        current=current.filter(function(_,i2){return i2!==idx});
+      }else{
+        // Select (add)
+        current=current.concat([item]);
+      }
+      n[slot]=current.length>0?current:[];
+      return n;
+    });
+    // Don't close picker on multi-select — let user pick more
   }
+  
+  function closeSlot(){setOpenSlot(null)}
+  
   function setSkipR(slot,reason){
-    setDayMeals(function(prev){var n=Object.assign({},prev);n[slot]=Object.assign({},SKIP,{skipReason:reason});return n});
+    setDayMeals(function(prev){var n=Object.assign({},prev);n[slot]=[Object.assign({},SKIP,{skipReason:reason})];return n});
     setSkipModal(null);
   }
   function pickWorkout(w){setDayWorkout(w);setOpenWo(false)}
 
   function saveDay(){
     setSaving(true);setMsg("");
-    var meals=SLOTS.filter(function(s2){return dayMeals[s2]}).map(function(s2){
-      var m=dayMeals[s2];
-      return{slot:s2,foodId:m.id||"skip",foodName:m.name,desc:m.desc||"",cal:m.cal||0,protein:m.p||0,carbs:m.c||0,fat:m.f||0,skipped:!!m.isSkip,skipReason:m.skipReason||""};
+    var meals=[];
+    SLOTS.forEach(function(s2){
+      var items=dayMeals[s2]||[];
+      items.forEach(function(m){
+        meals.push({slot:s2,foodId:m.id||"skip",foodName:m.name,desc:m.desc||"",cal:m.cal||0,protein:m.p||0,carbs:m.c||0,fat:m.f||0,skipped:!!m.isSkip,skipReason:m.skipReason||""});
+      });
     });
     var payload={action:"logFullDay",date:selDate,meals:meals,workout:dayWorkout?{workoutId:dayWorkout.id,workoutName:dayWorkout.name,duration:dayWorkout.dur,burn:dayWorkout.burn,intensity:dayWorkout.intensity}:null};
     apiPost(payload).then(function(r){
@@ -361,14 +409,14 @@ function App(){
 
   /* ----- Computed ----- */
   var totalCal=0,totalP=0,totalC=0,totalF=0;
-  SLOTS.forEach(function(k){var m=dayMeals[k];if(m&&!m.isSkip){totalCal+=Number(m.cal)||0;totalP+=Number(m.p)||0;totalC+=Number(m.c)||0;totalF+=Number(m.f)||0}});
+  SLOTS.forEach(function(k){var items=dayMeals[k]||[];items.forEach(function(m){if(!m.isSkip){totalCal+=Number(m.cal)||0;totalP+=Number(m.p)||0;totalC+=Number(m.c)||0;totalF+=Number(m.f)||0}})});
   var woBurn=dayWorkout?Number(dayWorkout.burn)||0:0;
   var calT=Number(settings.calorieTarget)||1600;
   var proT=Number(settings.proteinTarget)||110;
   var carbT=Number(settings.carbTarget)||165;
   var fatT=Number(settings.fatTarget)||50;
   var skCount=0;
-  SLOTS.forEach(function(s2){if(s2!=="cf"&&s2!=="cf2"&&s2!=="lp"&&s2!=="dp"&&dayMeals[s2]&&dayMeals[s2].isSkip)skCount++});
+  SLOTS.forEach(function(s2){if(s2!=="cf"&&s2!=="cf2"&&s2!=="lp"&&s2!=="dp"){var items=dayMeals[s2]||[];if(items.length===1&&items[0].isSkip)skCount++}});
 
   /* ========== SETUP SCREEN ========== */
   if(screen==="setup"){
