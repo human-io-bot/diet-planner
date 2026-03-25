@@ -179,6 +179,9 @@ function App(){
   var dayLoading_=s(false),dayLoading=dayLoading_[0],setDayLoading=dayLoading_[1];
   var err_=s(""),err=err_[0],setErr=err_[1];
   var step_=s(1),step=step_[0],setStep=step_[1];
+  var calOpen_=s(false),calOpen=calOpen_[0],setCalOpen=calOpen_[1];
+  var calMode_=s("day"),calMode=calMode_[0],setCalMode=calMode_[1]; // "day" | "week"
+  var calMonth_=s(todayStr().slice(0,7)),calMonth=calMonth_[0],setCalMonth=calMonth_[1];
 
   /* ----- Init ----- */
   useEffect(function(){
@@ -513,12 +516,67 @@ function App(){
           h("div",{style:{fontSize:11,color:"#8e8e93",marginTop:3,letterSpacing:"0.1px"}},"Target: "+calT+" kcal · Levo "+parseTime(settings.levoTime||"6:30 AM")))),
       h("button",{onClick:logout,style:{background:"#f2f2f7",border:"none",color:"#0A84FF",padding:"8px 14px",borderRadius:10,fontSize:14,cursor:"pointer",fontWeight:600}},"Logout")));
 
+  /* -- Calendar Modal (shared: day picker + week picker) -- */
+  function buildCalModal(){
+    if(!calOpen)return null;
+    var yr=parseInt(calMonth.slice(0,4));
+    var mo=parseInt(calMonth.slice(5,7))-1; // 0-based
+    var firstDay=new Date(yr,mo,1).getDay(); // 0=Sun
+    var daysInMonth=new Date(yr,mo+1,0).getDate();
+    var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+    var DAYS=["Su","Mo","Tu","We","Th","Fr","Sa"];
+    // navigate months
+    function prevMo(){var d=new Date(yr,mo-1,1);setCalMonth(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"))}
+    function nextMo(){var d=new Date(yr,mo+1,1);setCalMonth(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"))}
+    // build grid cells
+    var cells=[];
+    for(var i=0;i<firstDay;i++)cells.push(null);
+    for(var dd=1;dd<=daysInMonth;dd++)cells.push(dd);
+    // pad to full weeks
+    while(cells.length%7!==0)cells.push(null);
+    // render
+    return h("div",{style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center"},onClick:function(){setCalOpen(false)}},
+      h("div",{onClick:function(e){e.stopPropagation()},style:{background:"#fff",borderRadius:"24px 24px 0 0",padding:"20px 20px 36px",width:"100%",maxWidth:480}},
+        // header
+        h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}},
+          h("button",{onClick:prevMo,style:{background:"#f2f2f7",border:"none",borderRadius:10,padding:"8px 14px",fontSize:18,cursor:"pointer",color:"#0A84FF",fontWeight:700}},"‹"),
+          h("div",{style:{textAlign:"center"}},
+            h("div",{style:{fontSize:17,fontWeight:700,color:"#1c1c1e"}},MONTHS[mo]+" "+yr),
+            h("div",{style:{fontSize:12,color:"#8e8e93",marginTop:2}},calMode==="day"?"Tap a date":"Tap any day to select that week")),
+          h("button",{onClick:nextMo,style:{background:"#f2f2f7",border:"none",borderRadius:10,padding:"8px 14px",fontSize:18,cursor:"pointer",color:"#0A84FF",fontWeight:700}},"›")),
+        // day headers
+        h("div",{style:{display:"grid",gridTemplateColumns:"repeat(7,1fr)",marginBottom:6}},
+          DAYS.map(function(d){return h("div",{key:d,style:{textAlign:"center",fontSize:11,fontWeight:600,color:"#8e8e93",padding:"4px 0"}},d)})),
+        // calendar grid
+        h("div",{style:{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2}},
+          cells.map(function(dd,idx){
+            if(dd===null)return h("div",{key:"e"+idx});
+            var dStr=yr+"-"+String(mo+1).padStart(2,"0")+"-"+String(dd).padStart(2,"0");
+            var isTod=dStr===todayStr();
+            var isSel=calMode==="day"?dStr===selDate:getMonday(dStr)===getMonday(selDate);
+            var isInj=settings.injectionDay&&["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date(dStr+"T12:00:00").getDay()].toLowerCase()===String(settings.injectionDay).toLowerCase().slice(0,3);
+            return h("div",{key:dStr,onClick:function(){
+              if(calMode==="day"){setSelDate(dStr)}
+              else{setSelDate(getMonday(dStr))}
+              setCalOpen(false);
+            },style:{textAlign:"center",padding:"8px 2px",borderRadius:10,cursor:"pointer",background:isSel?"#0A84FF":isTod?"#e8f4ff":"transparent",position:"relative"}},
+              h("div",{style:{fontSize:16,fontWeight:isSel||isTod?700:400,color:isSel?"#fff":isTod?"#0A84FF":"#1c1c1e"}},dd),
+              isInj&&!isSel?h("div",{style:{width:4,height:4,borderRadius:"50%",background:"#ff9500",margin:"2px auto 0"}}):null);
+          })),
+        // today shortcut
+        h("button",{onClick:function(){setSelDate(todayStr());setCalOpen(false)},style:{width:"100%",marginTop:16,padding:14,borderRadius:14,border:"none",background:"#f2f2f7",color:"#0A84FF",fontSize:15,fontWeight:700,cursor:"pointer"}},"Go to Today")));
+  }
+  var calModal=buildCalModal();
+
   /* -- Date Strip -- */
-  var dateStrip=h("div",{style:{background:"#fff",padding:"14px 20px 10px",borderBottom:"1px solid rgba(0,0,0,0.06)",marginBottom:0}},
+  // strip centers on selDate, not always today
+  var stripCenter=selDate;
+  var dateStrip=h("div",{style:{background:"#fff",borderBottom:"1px solid rgba(0,0,0,0.06)",marginBottom:0}},
     h("div",{style:{maxWidth:600,margin:"0 auto"}},
-      h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:4}},
+      // mini week row
+      h("div",{style:{display:"flex",alignItems:"center",padding:"10px 12px 8px",gap:4}},
         [-3,-2,-1,0,1,2,3].map(function(offset){
-          var d=addDays(todayStr(),offset);
+          var d=addDays(stripCenter,offset);
           var dow=dayOfWeek(d);
           var dayShort=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][dow];
           var dateNum=d.slice(8);
@@ -529,7 +587,9 @@ function App(){
             h("div",{style:{fontSize:11,fontWeight:600,color:isSel?"rgba(255,255,255,0.85)":isToday?"#0A84FF":"#8e8e93",marginBottom:4}},dayShort),
             h("div",{style:{fontSize:18,fontWeight:isSel||isToday?800:500,color:isSel?"#fff":isToday?"#0A84FF":"#1c1c1e"}},dateNum),
             isInj&&!isSel?h("div",{style:{width:5,height:5,borderRadius:"50%",background:"#ff9500",margin:"3px auto 0"}}):null);
-        }))));
+        }),
+        // calendar icon button
+        h("div",{onClick:function(){setCalMode("day");setCalMonth(selDate.slice(0,7));setCalOpen(true)},style:{width:40,height:40,borderRadius:12,background:"#f2f2f7",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,marginLeft:4,fontSize:18}},"📅"))));
 
   /* -- Stats Hero (circular rings like Cal AI) -- */
   function ring(size,stroke,pct,color,bg){
@@ -761,61 +821,105 @@ function App(){
     h("div",{style:{paddingTop:12}},stats,dailyMacroBanner,levo,mealCards,woCard,noEat,skipWarn,saveBtn));
 
   /* -- Week Tab -- */
+  var weekMon=getMonday(selDate);
+  var weekSun=addDays(weekMon,6);
   var weekTab=h("div",{style:{padding:"14px 18px 0"}},
+    // week nav header with calendar picker
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}},
-      h("button",{onClick:function(){setSelDate(addDays(getMonday(selDate),-7))},style:{background:"#fff",border:"none",borderRadius:12,padding:"10px 16px",fontSize:15,cursor:"pointer",fontWeight:600,color:"#0A84FF",boxShadow:"0 1px 3px rgba(0,0,0,0.08)"}},"← Prev"),
-      h("span",{style:{fontSize:15,fontWeight:700,color:"#1c1c1e"}},"Week of "+getMonday(selDate)),
-      h("button",{onClick:function(){setSelDate(addDays(getMonday(selDate),7))},style:{background:"#fff",border:"none",borderRadius:12,padding:"10px 16px",fontSize:15,cursor:"pointer",fontWeight:600,color:"#0A84FF",boxShadow:"0 1px 3px rgba(0,0,0,0.08)"}},"Next →")),
+      h("button",{onClick:function(){setSelDate(addDays(weekMon,-7))},style:{background:"#fff",border:"none",borderRadius:12,padding:"10px 14px",fontSize:15,cursor:"pointer",fontWeight:600,color:"#0A84FF",boxShadow:"0 1px 3px rgba(0,0,0,0.08)"}},"‹"),
+      h("div",{onClick:function(){setCalMode("week");setCalMonth(weekMon.slice(0,7));setCalOpen(true)},style:{display:"flex",alignItems:"center",gap:8,cursor:"pointer",background:"#f2f2f7",padding:"8px 14px",borderRadius:12}},
+        h("span",{style:{fontSize:18}},"📅"),
+        h("div",null,
+          h("div",{style:{fontSize:14,fontWeight:700,color:"#1c1c1e"}},weekMon.slice(5)+" → "+weekSun.slice(5)),
+          h("div",{style:{fontSize:11,color:"#8e8e93",marginTop:1}},"Tap to pick week"))),
+      h("button",{onClick:function(){setSelDate(addDays(weekMon,7))},style:{background:"#fff",border:"none",borderRadius:12,padding:"10px 14px",fontSize:15,cursor:"pointer",fontWeight:600,color:"#0A84FF",boxShadow:"0 1px 3px rgba(0,0,0,0.08)"}},"›")),
     loading?h("div",{style:{textAlign:"center",padding:40,color:"#8e8e93",fontSize:16}},"Loading week…"):
     h("div",null,
+      // Weekly macro summary with CIRCULAR RINGS
       weekData.length>0?function(){
         var daysLogged=weekData.filter(function(d){return d.cal>0}).length;
-        var avgCal=daysLogged>0?Math.round(weekData.reduce(function(s2,d){return s2+d.cal},0)/daysLogged):0;
-        var avgP=daysLogged>0?Math.round(weekData.reduce(function(s2,d){return s2+d.p},0)/daysLogged):0;
-        var avgC=daysLogged>0?Math.round(weekData.reduce(function(s2,d){return s2+d.c},0)/daysLogged):0;
-        var avgF=daysLogged>0?Math.round(weekData.reduce(function(s2,d){return s2+d.f},0)/daysLogged):0;
+        var totalCalW=weekData.reduce(function(s2,d){return s2+d.cal},0);
+        var totalPW=weekData.reduce(function(s2,d){return s2+d.p},0);
+        var totalCW=weekData.reduce(function(s2,d){return s2+d.c},0);
+        var totalFW=weekData.reduce(function(s2,d){return s2+d.f},0);
         var totalBurn=weekData.reduce(function(s2,d){return s2+d.burn},0);
         var proteinDays=weekData.filter(function(d){return d.p>=proT*0.8}).length;
-        return h("div",{className:"card",style:{padding:"18px 18px 10px",marginBottom:12}},
+        // weekly targets = daily target × days logged (realistic)
+        var wCalT=calT*Math.max(daysLogged,1);
+        var wProT=proT*Math.max(daysLogged,1);
+        var wCarbT=carbT*Math.max(daysLogged,1);
+        var wFatT=fatT*Math.max(daysLogged,1);
+        // ring helper (reuse ring function)
+        function wRing(val,tgt,color,icon,label,unit){
+          var pct=tgt>0?Math.min((val/tgt)*100,120):0;
+          var rc=pct>110?"#ff3b30":pct>=80?color:"#ff9500";
+          return h("div",{style:{textAlign:"center"}},
+            h("div",{style:{position:"relative",width:72,height:72,margin:"0 auto 6px"}},
+              ring(72,8,pct,rc,"#f2f2f7"),
+              h("div",{style:{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}},icon)),
+            h("div",{style:{fontSize:15,fontWeight:800,color:"#1c1c1e"}},val+unit),
+            h("div",{style:{fontSize:11,color:"#8e8e93"}},"/"+tgt+unit),
+            h("div",{style:{fontSize:11,fontWeight:700,color:rc}},label));
+        }
+        return h("div",{className:"card",style:{padding:"16px 16px 14px",marginBottom:12}},
           h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}},
-            h("span",{style:{fontSize:15,fontWeight:700,color:"#1c1c1e"}},"Weekly Macro Avg"),
-            h("span",{style:{fontSize:12,color:"#8e8e93"}},daysLogged+"/7 days logged")),
-          macroBar("Avg Calories",avgCal,calT,"#30D158","🔥"," kcal"),
-          macroBar("Avg Protein",avgP,proT,"#0A84FF","🥩","g"),
-          macroBar("Avg Carbs",avgC,carbT,"#ff9500","🍞","g"),
-          macroBar("Avg Fat",avgF,fatT,"#5856d6","🫒","g"),
-          h("div",{style:{display:"flex",gap:8,marginTop:10,marginBottom:4}},
-            h("div",{style:{flex:1,background:"#fff9e6",borderRadius:12,padding:"12px",textAlign:"center"}},
-              h("div",{style:{fontSize:11,color:"#8e8e93",fontWeight:600}},"🏋️ Total Burn"),
-              h("div",{style:{fontSize:22,fontWeight:800,color:"#ff9500",marginTop:2}},totalBurn+" kcal")),
-            h("div",{style:{flex:1,background:proteinDays>=5?"#e5f9ee":proteinDays>=3?"#fff9e6":"#fff0ef",borderRadius:12,padding:"12px",textAlign:"center"}},
-              h("div",{style:{fontSize:11,color:"#8e8e93",fontWeight:600}},"🥩 Protein Days"),
-              h("div",{style:{fontSize:22,fontWeight:800,color:proteinDays>=5?"#30D158":proteinDays>=3?"#ff9500":"#ff3b30",marginTop:2}},proteinDays+"/7"),
-              h("div",{style:{fontSize:10,color:"#aeaeb2",marginTop:1}},"≥80% target"))));
+            h("div",null,
+              h("div",{style:{fontSize:15,fontWeight:700,color:"#1c1c1e"}},"Week Summary"),
+              h("div",{style:{fontSize:12,color:"#8e8e93",marginTop:2}},daysLogged+"/7 days logged")),
+            h("div",{style:{textAlign:"right"}},
+              h("div",{style:{fontSize:11,color:"#8e8e93"}},"Total Burn"),
+              h("div",{style:{fontSize:18,fontWeight:800,color:"#ff9500"}},totalBurn+" kcal"))),
+          // big calories ring
+          h("div",{style:{display:"flex",alignItems:"center",gap:16,marginBottom:16,paddingBottom:14,borderBottom:"1px solid #f2f2f7"}},
+            h("div",{style:{position:"relative",width:100,height:100,flexShrink:0}},
+              ring(100,10,(totalCalW/wCalT)*100,totalCalW>wCalT?"#ff3b30":"#30D158","#f2f2f7"),
+              h("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}},
+                h("div",{style:{fontSize:16,fontWeight:800,color:totalCalW>wCalT?"#ff3b30":"#30D158"}},Math.round((totalCalW/wCalT)*100)+"%"),
+                h("div",{style:{fontSize:9,color:"#8e8e93",fontWeight:600}},totalCalW>wCalT?"over":"of goal"))),
+            h("div",{style:{flex:1}},
+              h("div",{style:{fontSize:13,color:"#8e8e93",marginBottom:2}},"Calories consumed"),
+              h("div",{style:{display:"flex",alignItems:"baseline",gap:4}},
+                h("span",{style:{fontSize:38,fontWeight:800,color:"#1c1c1e",letterSpacing:"-1px",lineHeight:1}},totalCalW),
+                h("span",{style:{fontSize:16,color:"#8e8e93"}},"/"+wCalT)),
+              h("div",{style:{marginTop:8,display:"flex",gap:6}},
+                h("span",{style:{fontSize:12,background:"#e8f4ff",color:"#0A84FF",padding:"3px 8px",borderRadius:6,fontWeight:700}},"Avg "+Math.round(totalCalW/Math.max(daysLogged,1))+"/day"),
+                h("span",{style:{fontSize:12,background:"#fff9e6",color:"#ff9500",padding:"3px 8px",borderRadius:6,fontWeight:700}},proteinDays+"/7 protein days")))),
+          // P/C/F rings row
+          h("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}},
+            wRing(totalPW,wProT,"#0A84FF","🥩","Protein","g"),
+            wRing(totalCW,wCarbT,"#ff9500","🍞","Carbs","g"),
+            wRing(totalFW,wFatT,"#5856d6","🫒","Fat","g")));
       }():null,
+      // daily rows
       weekData.map(function(d,i){
         var isToday=d.date===todayStr();
-        return h("div",{key:i,className:"card",style:{padding:"14px 16px",marginBottom:8,background:isToday?"#f0f7ff":"#fff",outline:isToday?"2px solid #0A84FF":"none"}},
+        var calPctD=calT>0?Math.min(Math.round((d.cal/calT)*100),100):0;
+        return h("div",{key:i,className:"card",style:{padding:"12px 14px",marginBottom:8,background:isToday?"#f0f7ff":"#fff",outline:isToday?"2px solid #0A84FF":"none"},
+          onClick:function(){setSelDate(d.date);setTab("today")}},
           h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
             h("div",{style:{display:"flex",alignItems:"center",gap:8}},
-              h("span",{style:{fontSize:16,fontWeight:700,color:"#1c1c1e"}},d.day.slice(0,3)),
-              h("span",{style:{fontSize:13,color:"#8e8e93"}},d.date),
-              isToday?h("span",{style:{fontSize:11,background:"#0A84FF",color:"#fff",padding:"2px 8px",borderRadius:6,fontWeight:600}},"Today"):null),
-            h("div",{style:{display:"flex",gap:10,alignItems:"center"}},
-              h("span",{style:{fontSize:18,fontWeight:800,color:d.cal>calT?"#ff3b30":"#30D158"}},d.cal),
-              h("span",{style:{fontSize:13,color:"#ff9500",fontWeight:600}},"-"+d.burn),
-              h("span",{style:{fontSize:15,fontWeight:800,color:"#0A84FF"}},d.cal-d.burn))),
-          h("div",{style:{display:"flex",gap:10,marginTop:6,fontSize:13}},
+              h("span",{style:{fontSize:15,fontWeight:700,color:"#1c1c1e"}},d.day.slice(0,3)),
+              h("span",{style:{fontSize:12,color:"#8e8e93"}},d.date.slice(5)),
+              isToday?h("span",{style:{fontSize:11,background:"#0A84FF",color:"#fff",padding:"2px 7px",borderRadius:6,fontWeight:600}},"Today"):null),
+            h("div",{style:{display:"flex",gap:8,alignItems:"center"}},
+              h("span",{style:{fontSize:17,fontWeight:800,color:d.cal>calT?"#ff3b30":"#30D158"}},d.cal),
+              h("span",{style:{fontSize:12,color:"#ff9500",fontWeight:600}},d.burn>0?"-"+d.burn+"🔥":""),
+              h("span",{style:{fontSize:14,fontWeight:700,color:"#0A84FF"}},d.cal-d.burn))),
+          // mini progress bar
+          h("div",{style:{background:"#f2f2f7",borderRadius:4,height:4,overflow:"hidden",marginTop:8}},
+            h("div",{style:{width:calPctD+"%",height:"100%",borderRadius:4,background:d.cal>calT?"#ff3b30":d.cal>calT*0.8?"#30D158":"#ff9500",transition:"width 0.3s"}})),
+          h("div",{style:{display:"flex",gap:8,marginTop:6,fontSize:12}},
             h("span",{style:{color:"#0A84FF",fontWeight:600}},"P:"+d.p+"g"),
             h("span",{style:{color:"#ff9500",fontWeight:600}},"C:"+d.c+"g"),
             h("span",{style:{color:"#5856d6",fontWeight:600}},"F:"+d.f+"g"),
-            h("span",{style:{color:"#8e8e93"}},"WO: "+d.woName),
-            d.skip>0?h("span",{style:{color:"#ff3b30"}},"Skip: "+d.skip):null))}),
-      weekData.length>0?h("div",{className:"card",style:{padding:18,marginTop:4,display:"flex",justifyContent:"space-around",textAlign:"center",background:"#1c1c1e"}},
-        h("div",null,h("div",{style:{fontSize:11,color:"rgba(255,255,255,0.5)",fontWeight:600}},"Avg Cal"),h("div",{style:{fontSize:22,fontWeight:800,color:"#fff"}},Math.round(weekData.reduce(function(s2,d){return s2+d.cal},0)/Math.max(weekData.filter(function(d){return d.cal>0}).length,1)))),
-        h("div",null,h("div",{style:{fontSize:11,color:"rgba(255,255,255,0.5)",fontWeight:600}},"Avg P"),h("div",{style:{fontSize:22,fontWeight:800,color:"#fff"}},Math.round(weekData.reduce(function(s2,d){return s2+d.p},0)/Math.max(weekData.filter(function(d){return d.cal>0}).length,1))+"g")),
-        h("div",null,h("div",{style:{fontSize:11,color:"rgba(255,255,255,0.5)",fontWeight:600}},"Burn"),h("div",{style:{fontSize:22,fontWeight:800,color:"#ff9500"}},weekData.reduce(function(s2,d){return s2+d.burn},0))),
-        h("div",null,h("div",{style:{fontSize:11,color:"rgba(255,255,255,0.5)",fontWeight:600}},"Avg Net"),h("div",{style:{fontSize:22,fontWeight:800,color:"#30D158"}},Math.round(weekData.reduce(function(s2,d){return s2+d.cal-d.burn},0)/Math.max(weekData.filter(function(d){return d.cal>0}).length,1))))):null));
+            h("span",{style:{color:"#8e8e93"}},d.woName!=="--"?"🏋️ "+d.woName:""),
+            d.skip>0?h("span",{style:{color:"#ff3b30"}},"⚠️"+d.skip+" skipped"):null))}),
+      // dark summary bar
+      weekData.length>0?h("div",{className:"card",style:{padding:16,marginTop:4,marginBottom:4,display:"flex",justifyContent:"space-around",textAlign:"center",background:"#1c1c1e"}},
+        h("div",null,h("div",{style:{fontSize:10,color:"rgba(255,255,255,0.5)",fontWeight:600,marginBottom:2}},"Avg Cal"),h("div",{style:{fontSize:20,fontWeight:800,color:"#fff"}},Math.round(weekData.reduce(function(s2,d){return s2+d.cal},0)/Math.max(weekData.filter(function(d){return d.cal>0}).length,1)))),
+        h("div",null,h("div",{style:{fontSize:10,color:"rgba(255,255,255,0.5)",fontWeight:600,marginBottom:2}},"Avg P"),h("div",{style:{fontSize:20,fontWeight:800,color:"#0A84FF"}},Math.round(weekData.reduce(function(s2,d){return s2+d.p},0)/Math.max(weekData.filter(function(d){return d.cal>0}).length,1))+"g")),
+        h("div",null,h("div",{style:{fontSize:10,color:"rgba(255,255,255,0.5)",fontWeight:600,marginBottom:2}},"Burn"),h("div",{style:{fontSize:20,fontWeight:800,color:"#ff9500"}},weekData.reduce(function(s2,d){return s2+d.burn},0))),
+        h("div",null,h("div",{style:{fontSize:10,color:"rgba(255,255,255,0.5)",fontWeight:600,marginBottom:2}},"Avg Net"),h("div",{style:{fontSize:20,fontWeight:800,color:"#30D158"}},Math.round(weekData.reduce(function(s2,d){return s2+d.cal-d.burn},0)/Math.max(weekData.filter(function(d){return d.cal>0}).length,1))))):null));
 
   /* -- Weight Tab -- */
   var weightTab=h("div",{style:{padding:"14px 18px 0"}},
@@ -931,7 +1035,7 @@ function App(){
   var content=h("div",{style:{maxWidth:600,margin:"0 auto"}},
     tab==="today"?todayTab:tab==="week"?weekTab:tab==="weight"?weightTab:settingsTab);
 
-  return h("div",{style:{paddingBottom:96,background:"#f2f2f7",minHeight:"100vh"}},toast,skipMod,header,content,bottomBar);
+  return h("div",{style:{paddingBottom:96,background:"#f2f2f7",minHeight:"100vh"}},toast,calModal,skipMod,header,content,bottomBar);
 }
 
 /* ===== RENDER ===== */
