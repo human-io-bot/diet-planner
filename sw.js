@@ -1,7 +1,10 @@
-const CACHE_NAME = "diet-planner-v5";
+const CACHE_NAME = "navwins-v1";
 const ASSETS = [
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "./icons/icon-192x192.png",
+  "./icons/icon-512x512.png",
+  "./icons/icon-180x180.png"
 ];
 
 // Install: cache core assets
