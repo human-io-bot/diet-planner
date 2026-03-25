@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="80" viewBox="0 0 440 80">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2C6975"/><stop offset="100%" stop-color="#1A4F5A"/></linearGradient>
+<linearGradient id="ro" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#30D8EE"/><stop offset="100%" stop-color="#4A9AFF"/></linearGradient>
+<linearGradient id="ri" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#5ED88A"/><stop offset="100%" stop-color="#3AA06A"/></linearGradient>
+<linearGradient id="yg" x1="0.5" y1="0" x2="0.5" y2="1"><stop offset="0%" stop-color="#30D8EE"/><stop offset="45%" stop-color="#E0B860"/><stop offset="100%" stop-color="#5ED88A"/></linearGradient>
+</defs>
+<rect x="4" y="4" width="72" height="72" rx="16" fill="url(#bg)"/>
+<g transform="translate(40,37)">
+<circle cx="0" cy="0" r="24" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3.5"/>
+<circle cx="0" cy="0" r="24" fill="none" stroke="url(#ro)" stroke-width="3.5" stroke-dasharray="122 30" stroke-linecap="round" transform="rotate(-130)"/>
+<circle cx="0" cy="0" r="17" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="2.5"/>
+<circle cx="0" cy="0" r="17" fill="none" stroke="url(#ri)" stroke-width="2.5" stroke-dasharray="85 22" stroke-linecap="round" transform="rotate(-90)"/>
+<g stroke="url(#yg)" fill="none"><polygon points="0,-18 -14,10 14,10" stroke-width="0.8" opacity="0.8"/><polygon points="0,18 -14,-10 14,-10" stroke-width="0.8" opacity="0.8"/></g>
+<circle cx="0" cy="0" r="5.5" fill="rgba(255,255,255,0.05)" stroke="#E0B860" stroke-width="0.4" opacity="0.75"/>
+<text x="0" y="2.5" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="5.5" font-weight="700" fill="rgba(255,255,255,0.75)">NW</text>
+</g>
+<polygon points="40,2 38,7 40,5 42,7" fill="#30D8EE" opacity="0.8"/>
+<!-- Option C dark lockup: NAV white, gold dot, bright teal WINS -->
+<text x="96" y="38" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="28" font-weight="700" fill="#FFFFFF" letter-spacing="2">NAV</text>
+<text x="152" y="38" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="28" font-weight="700" fill="#E0B860" letter-spacing="2">.</text>
+<text x="163" y="38" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="28" font-weight="700" fill="#30D8EE" letter-spacing="2">WINS</text>
+<text x="96" y="56" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="9" fill="#777777" letter-spacing="4">TRACK · TRANSFORM · THRIVE</text>
+</svg>
