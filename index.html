@@ -325,45 +325,30 @@ function App(){
 
   /* ----- Actions ----- */
   function pickMeal(slot,item){
-    var isCoffee=slot==="cf"||slot==="cf2";
-    var isProtein=slot==="lp"||slot==="dp";
+    var isSkipItem=item.isSkip||item.isVeg||(Number(item.cal)===0&&(slot==="lp"||slot==="dp"||slot==="cf"||slot==="cf2"));
     
-    // Coffee and protein stay single-select
-    if(isCoffee||isProtein){
+    // Skip/No Protein/Skip Coffee = clear all, single override
+    if(isSkipItem){
       setDayMeals(function(prev){var n=Object.assign({},prev);n[slot]=[item];return n});
       setOpenSlot(null);
       if(item.isSkip&&slot!=="lp"&&slot!=="dp"&&slot!=="cf"&&slot!=="cf2")setSkipModal(slot);
       return;
     }
     
-    // Skip is always single (replaces everything)
-    if(item.isSkip){
-      setDayMeals(function(prev){var n=Object.assign({},prev);n[slot]=[item];return n});
-      setOpenSlot(null);
-      setSkipModal(slot);
-      return;
-    }
-    
-    // Multi-select: toggle item on/off
+    // Multi-select toggle for ALL slots
     setDayMeals(function(prev){
       var n=Object.assign({},prev);
       var current=n[slot]||[];
-      // If current has a skip, clear it first
-      if(current.length===1&&current[0].isSkip)current=[];
-      // Check if item already selected
+      // If current has a skip/zero item, clear it first
+      if(current.length===1&&(current[0].isSkip||current[0].isVeg||(Number(current[0].cal)===0)))current=[];
+      // Toggle
       var idx=-1;
       for(var i=0;i<current.length;i++){if(current[i].id===item.id){idx=i;break}}
-      if(idx>-1){
-        // Deselect
-        current=current.filter(function(_,i2){return i2!==idx});
-      }else{
-        // Select (add)
-        current=current.concat([item]);
-      }
+      if(idx>-1){current=current.filter(function(_,i2){return i2!==idx})}
+      else{current=current.concat([item])}
       n[slot]=current.length>0?current:[];
       return n;
     });
-    // Don't close picker on multi-select — let user pick more
   }
   
   function closeSlot(){setOpenSlot(null)}
