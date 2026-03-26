@@ -50,7 +50,7 @@ var DAY_LABELS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Sat
 var SKIP={id:"skip",name:"Skip / NA",desc:"Skipping this meal",cal:0,p:0,c:0,f:0,isSkip:true};
 var SKIP_REASONS=["Not hungry","Nausea (Zepbound)","Fasting","Running late","Ate out","Other"];
 var MENU_MAP={bf:"bf",coffee:["cf","cf2"],main:["lu","dn"],snack:["ms","es"],protein:["lp","dp"]};
-var CACHE_VER="12";
+var CACHE_VER="13";
 
 /* ===== UTILITIES ===== */
 var LS={
@@ -132,7 +132,7 @@ function App(){
   var menu_=s(null),menu=menu_[0],setMenu=menu_[1];
   var workouts_=s([]),workouts=workouts_[0],setWorkouts=workouts_[1];
   var settings_=s({}),settings=settings_[0],setSettings=settings_[1];
-  var tab_=s("today"),tab=tab_[0],setTab=tab_[1];
+  var tab_=s("log"),tab=tab_[0],setTab=tab_[1];
   var selDate_=s(todayStr()),selDate=selDate_[0],setSelDate=selDate_[1];
   var dayMeals_=s({}),dayMeals=dayMeals_[0],setDayMeals=dayMeals_[1];
   var dayWorkout_=s(null),dayWorkout=dayWorkout_[0],setDayWorkout=dayWorkout_[1];
@@ -151,6 +151,10 @@ function App(){
   var calOpen_=s(false),calOpen=calOpen_[0],setCalOpen=calOpen_[1];
   var calMode_=s("day"),calMode=calMode_[0],setCalMode=calMode_[1]; // "day" | "week"
   var calMonth_=s(todayStr().slice(0,7)),calMonth=calMonth_[0],setCalMonth=calMonth_[1];
+  var settingsOpen_=s(false),settingsOpen=settingsOpen_[0],setSettingsOpen=settingsOpen_[1];
+  var logSlot_=s("bf"),logSlot=logSlot_[0],setLogSlot=logSlot_[1];
+  var logSearch_=s(""),logSearch=logSearch_[0],setLogSearch=logSearch_[1];
+  var logSelected_=s([]),logSelected=logSelected_[0],setLogSelected=logSelected_[1];
 
   /* ----- Init ----- */
   useEffect(function(){
@@ -483,7 +487,7 @@ function App(){
         h("div",null,
           NavWordmark(19,"#1c1c1e"),
           h("div",{style:{fontSize:11,color:"#8e8e93",marginTop:3,letterSpacing:"0.1px"}},"Target: "+calT+" kcal · Levo "+parseTime(settings.levoTime||"6:30 AM")))),
-      h("button",{onClick:logout,style:{background:"#f2f2f7",border:"none",color:"#2C6975",padding:"8px 14px",borderRadius:10,fontSize:14,cursor:"pointer",fontWeight:600}},"Logout")));
+      h("button",{onClick:function(){setSettingsOpen(true)},style:{background:"#f2f2f7",border:"none",color:"#2C6975",padding:"8px 12px",borderRadius:10,fontSize:20,cursor:"pointer",lineHeight:1}},"\u2699\uFE0F")));
 
   /* -- Calendar Modal (shared: day picker + week picker) -- */
   function buildCalModal(){
@@ -785,9 +789,7 @@ function App(){
     h("button",{onClick:saveDay,disabled:saving,style:{width:"100%",padding:18,borderRadius:16,border:"none",background:saving?"#aeaeb2":"linear-gradient(135deg,#2C6975,#50C878)",color:"#fff",fontSize:17,fontWeight:700,cursor:"pointer",letterSpacing:"-0.2px",boxShadow:saving?"none":"0 4px 16px rgba(44,105,117,0.3)"}},saving?"Saving…":"\uD83D\uDCBE Save Today's Plan"));
 
   /* -- Today Tab -- */
-  var todayTab=h("div",null,dateStrip,
-    dayLoading?h("div",{style:{textAlign:"center",padding:60}},h("div",{style:{fontSize:44}},"\uD83C\uDF7D\uFE0F"),h("div",{style:{color:"#8e8e93",fontSize:16,marginTop:12}},"Loading…")):
-    h("div",{style:{paddingTop:12}},stats,dailyMacroBanner,levo,mealCards,woCard,noEat,skipWarn,saveBtn));
+  /* -- Today Tab (old - replaced by sorted version below) -- */
 
   /* -- Week Tab -- */
   var weekMon=getMonday(selDate);
@@ -938,73 +940,176 @@ function App(){
           h("div",null,h("div",{style:{fontSize:12,color:"#8e8e93",fontWeight:600}},"Current"),h("div",{style:{fontSize:20,fontWeight:800,color:"#2C6975"}},weightHist[weightHist.length-1].weight+" kg")),
           h("div",null,h("div",{style:{fontSize:12,color:"#8e8e93",fontWeight:600}},"Lost"),h("div",{style:{fontSize:20,fontWeight:800,color:"#50C878"}},(Number(weightHist[0].weight)-Number(weightHist[weightHist.length-1].weight)).toFixed(1)+" kg"))):null)));
 
-  /* -- Settings Tab -- */
-  var settingsTab=h("div",{style:{padding:"14px 18px 0"}},
-    h("div",{className:"card",style:{padding:"4px 0",marginBottom:12,overflow:"hidden"}},
-      h("div",{style:{padding:"14px 16px 10px",borderBottom:"1px solid #f2f2f7"}},
-        h("span",{style:{fontSize:13,fontWeight:600,color:"#8e8e93",textTransform:"uppercase",letterSpacing:"0.5px"}},"Your Settings")),
-      Object.keys(settings).filter(function(k){return k!=="apiKey"}).map(function(k){
-        return h("div",{key:k,style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"13px 16px",borderBottom:"1px solid #f2f2f7"}},
-          h("span",{style:{fontSize:15,color:"#3a3a3c"}},k),
-          h("span",{style:{fontSize:15,color:"#8e8e93",fontWeight:500}},parseTime(String(settings[k]))));})),
-    function(){
-      var lastChange=settings.apiKeyLastChanged;
-      var daysSince=999;
-      if(lastChange){try{var d=new Date(lastChange);daysSince=Math.floor((Date.now()-d.getTime())/(1000*60*60*24))}catch(ex){}}
-      if(daysSince>90||!lastChange){
-        return h("div",{className:"card",style:{padding:16,marginBottom:12,background:"#fff0ef"}},
-          h("div",{style:{display:"flex",alignItems:"center",gap:10,marginBottom:8}},
-            h("span",{style:{fontSize:22}},"🔐"),
-            h("div",null,
-              h("div",{style:{fontSize:15,fontWeight:700,color:"#c0392b"}},"API Key Rotation Recommended"),
-              h("div",{style:{fontSize:13,color:"#c0392b",marginTop:2,opacity:0.8}},lastChange?"Last changed "+daysSince+" days ago":"No rotation date recorded"))),
-          h("p",{style:{margin:0,fontSize:13,color:"#c0392b",lineHeight:1.6,opacity:0.9}},
-            "To rotate: 1) Open Google Sheet → Settings tab → change 'apiKey'. 2) Update 'apiKeyLastChanged' to "+todayStr()+". 3) Redeploy. 4) Logout & reconnect here."));
-      }
-      return null;
-    }(),
-    h("div",{className:"card",style:{padding:"4px 0",marginBottom:12,overflow:"hidden"}},
-      h("div",{style:{padding:"14px 16px 10px",borderBottom:"1px solid #f2f2f7"}},
-        h("span",{style:{fontSize:13,fontWeight:600,color:"#8e8e93",textTransform:"uppercase",letterSpacing:"0.5px"}},"Security")),
-      [
-        {l:"Connection",v:"✅ HTTPS Encrypted"},
-        {l:"API Key Storage",v:"✅ Encoded"},
-        {l:"Backend Rate Limit",v:"✅ 100 req/hr"},
-        {l:"Input Validation",v:"✅ Active"},
-        {l:"Content Security Policy",v:"⚠️ N/A (Apps Script)"},
-        {l:"Data Scope",v:"✅ Single Sheet Only"}
-      ].map(function(row,i,arr){
-        return h("div",{key:i,style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"13px 16px",borderBottom:i<arr.length-1?"1px solid #f2f2f7":"none"}},
-          h("span",{style:{fontSize:15,color:"#3a3a3c"}},row.l),
-          h("span",{style:{fontSize:14,fontWeight:600,color:row.v.startsWith("⚠️")?"#ff9500":"#50C878"}},row.v));})),
-    h("div",{className:"card",style:{padding:20,marginBottom:12,background:"linear-gradient(135deg,#ff2d55,#ff375f)"}},
-      h("div",{style:{display:"flex",alignItems:"center",gap:12,marginBottom:14}},
-        h("span",{style:{fontSize:30}},"❤️"),
-        h("div",null,
-          h("div",{style:{fontSize:16,fontWeight:700,color:"#fff"}},"Apple Health Sync"),
-          h("div",{style:{fontSize:13,color:"rgba(255,255,255,0.8)",marginTop:2}},"Sync nutrition, weight & workouts"))),
-      h("button",{onClick:function(){window.location.href="shortcuts://run-shortcut?name=Sync%20Diet%20to%20Health"},style:{width:"100%",padding:14,borderRadius:12,border:"2px solid rgba(255,255,255,0.35)",background:"rgba(255,255,255,0.15)",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",marginBottom:10}},"🔄 Sync Today to Apple Health"),
-      h("button",{onClick:function(){api("getHealthExport",{date:todayStr()}).then(function(r){if(r.success){var n=r.nutrition;var b=r.body;var w=r.workout;setMsg("Cal:"+n.calories+" P:"+n.protein+"g C:"+n.carbs+"g F:"+n.fat+"g | Wt:"+(b.weight||"--")+"kg | Burn:"+w.activeEnergy)}else setMsg("Error fetching data")}).catch(function(){setMsg("Connection error")})},style:{width:"100%",padding:12,borderRadius:12,border:"1px solid rgba(255,255,255,0.3)",background:"transparent",color:"#fff",fontSize:14,fontWeight:600,cursor:"pointer"}},"📊 Preview Today's Health Data"),
-      h("p",{style:{margin:"10px 0 0",fontSize:12,color:"rgba(255,255,255,0.75)",lineHeight:1.5}},"First time? Create the \"Sync Diet to Health\" shortcut in the Shortcuts app.")),
-    h("div",{className:"card",style:{padding:16,marginBottom:12,background:"#fffdf5"}},
-      h("div",{style:{fontSize:14,fontWeight:700,color:"#92400e",marginBottom:6}},"How to edit settings & menu"),
-      h("p",{style:{fontSize:14,color:"#78350f",lineHeight:1.6,margin:0}},"Open your Google Sheet → Settings tab → edit column B. Add foods in FoodMenu tab (coffee, bf, main, snack, protein). Changes load on next app open.")),
-    h("button",{onClick:logout,style:{width:"100%",padding:16,borderRadius:14,border:"none",background:"#fff0ef",color:"#ff3b30",fontSize:16,fontWeight:600,cursor:"pointer",marginBottom:4}},"Disconnect & Reset"));
+  /* -- Settings Slide-in Panel (Phase 1) -- */
+  var settingsPanel=settingsOpen?h("div",{style:{position:"fixed",inset:0,zIndex:200}},
+    h("div",{onClick:function(){setSettingsOpen(false)},style:{position:"absolute",inset:0,background:"rgba(0,0,0,0.4)"}}),
+    h("div",{style:{position:"absolute",top:0,right:0,bottom:0,width:"85%",maxWidth:380,background:"#f2f2f7",overflowY:"auto",padding:"60px 18px 40px",boxShadow:"-4px 0 24px rgba(0,0,0,0.12)"}},
+      h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}},
+        h("span",{style:{fontSize:20,fontWeight:800,color:"#1c1c1e"}},"Settings"),
+        h("button",{onClick:function(){setSettingsOpen(false)},style:{background:"#e5e5ea",border:"none",borderRadius:10,padding:"6px 14px",fontSize:14,cursor:"pointer",color:"#3a3a3c",fontWeight:600}},"Done")),
+      h("div",{className:"card",style:{padding:"4px 0",marginBottom:12,overflow:"hidden"}},
+        h("div",{style:{padding:"12px 16px 8px",borderBottom:"1px solid #f2f2f7"}},
+          h("span",{style:{fontSize:12,fontWeight:600,color:"#8e8e93",textTransform:"uppercase",letterSpacing:"0.5px"}},"Targets & Schedule")),
+        Object.keys(settings).filter(function(k){return k!=="apiKey"}).map(function(k){
+          return h("div",{key:k,style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 16px",borderBottom:"1px solid #f2f2f7"}},
+            h("span",{style:{fontSize:14,color:"#3a3a3c"}},k),
+            h("span",{style:{fontSize:14,color:"#8e8e93",fontWeight:500}},parseTime(String(settings[k]))));})),
+      h("div",{className:"card",style:{padding:20,marginBottom:12,background:"linear-gradient(135deg,#ff2d55,#ff375f)"}},
+        h("div",{style:{display:"flex",alignItems:"center",gap:12,marginBottom:12}},
+          h("span",{style:{fontSize:26}},"❤️"),
+          h("div",null,
+            h("div",{style:{fontSize:15,fontWeight:700,color:"#fff"}},"Apple Health Sync"),
+            h("div",{style:{fontSize:12,color:"rgba(255,255,255,0.8)",marginTop:2}},"Sync nutrition, weight & workouts"))),
+        h("button",{onClick:function(){window.location.href="shortcuts://run-shortcut?name=Sync%20Diet%20to%20Health"},style:{width:"100%",padding:12,borderRadius:12,border:"2px solid rgba(255,255,255,0.35)",background:"rgba(255,255,255,0.15)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",marginBottom:8}},"Sync Today to Apple Health"),
+        h("button",{onClick:function(){api("getHealthExport",{date:todayStr()}).then(function(r){if(r.success){var n=r.nutrition;setMsg("Cal:"+n.calories+" P:"+n.protein+"g C:"+n.carbs+"g F:"+n.fat+"g")}else setMsg("Error")}).catch(function(){setMsg("Connection error")})},style:{width:"100%",padding:10,borderRadius:12,border:"1px solid rgba(255,255,255,0.3)",background:"transparent",color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer"}},"Preview Health Data")),
+      h("div",{className:"card",style:{padding:"4px 0",marginBottom:12,overflow:"hidden"}},
+        h("div",{style:{padding:"12px 16px 8px",borderBottom:"1px solid #f2f2f7"}},
+          h("span",{style:{fontSize:12,fontWeight:600,color:"#8e8e93",textTransform:"uppercase",letterSpacing:"0.5px"}},"Security")),
+        [{l:"Connection",v:"\u2705 HTTPS"},{l:"API Key",v:"\u2705 Encoded"},{l:"Data Scope",v:"\u2705 Single Sheet"}].map(function(row,i,arr){
+          return h("div",{key:i,style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 16px",borderBottom:i<arr.length-1?"1px solid #f2f2f7":"none"}},
+            h("span",{style:{fontSize:14,color:"#3a3a3c"}},row.l),
+            h("span",{style:{fontSize:13,fontWeight:600,color:"#50C878"}},row.v));})),
+      h("div",{className:"card",style:{padding:14,marginBottom:12,background:"#fffdf5"}},
+        h("div",{style:{fontSize:13,fontWeight:700,color:"#92400e",marginBottom:4}},"Edit settings & menu"),
+        h("p",{style:{fontSize:13,color:"#78350f",lineHeight:1.5,margin:0}},"Open Google Sheet \u2192 Settings tab \u2192 edit column B. Add foods in FoodMenu tab.")),
+      h("button",{onClick:logout,style:{width:"100%",padding:16,borderRadius:14,border:"none",background:"#fff0ef",color:"#ff3b30",fontSize:16,fontWeight:600,cursor:"pointer"}},"Disconnect & Reset"))):null;
 
-  /* -- Bottom Tabs -- */
-  var tabs=[{k:"today",l:"Today",ic:"📅"},{k:"week",l:"Week",ic:"📊"},{k:"weight",l:"Weight",ic:"⚖️"},{k:"settings",l:"Settings",ic:"⚙️"}];
-  var bottomBar=h("div",{style:{position:"fixed",bottom:0,left:0,right:0,background:"rgba(255,255,255,0.92)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:"1px solid rgba(0,0,0,0.08)",display:"flex",justifyContent:"space-around",padding:"10px 0 20px",zIndex:50}},
+  /* -- Log Tab (Phase 3) -- */
+  var isWoSlot=logSlot==="workout";
+  var logSlotItems=isWoSlot?[]:((menu||{})[logSlot]||[]);
+  var filteredLogItems=logSearch.trim()?logSlotItems.filter(function(it){return(it.name||"").toLowerCase().indexOf(logSearch.toLowerCase())>-1||(it.desc||"").toLowerCase().indexOf(logSearch.toLowerCase())>-1}):logSlotItems;
+  var logSelTotal=logSelected.reduce(function(s,it){return s+(Number(it.cal)||0)},0);
+
+  function toggleLogItem(item){
+    var exists=logSelected.some(function(s){return s.id===item.id});
+    if(exists) setLogSelected(logSelected.filter(function(s){return s.id!==item.id}));
+    else setLogSelected(logSelected.concat([item]));
+  }
+  function saveLogEntries(){
+    if(isWoSlot) return;
+    if(logSelected.length===0) return;
+    setSaving(true);
+    var date=selDate;
+    var day=DAY_LABELS[dayOfWeek(date)];
+    // Remove existing entries for this slot, then add new ones
+    var promises=logSelected.map(function(item){
+      return apiPost({action:"logMeal",date:date,slot:logSlot,foodId:item.id,foodName:item.name,desc:item.desc||"",cal:Number(item.cal)||0,protein:Number(item.p)||0,carbs:Number(item.c)||0,fat:Number(item.f)||0,skipped:false});
+    });
+    Promise.all(promises).then(function(){
+      setMsg(logSelected.length+" item"+(logSelected.length>1?"s":"")+" saved to "+SLOT_META[logSlot].label);
+      setLogSelected([]);
+      CACHE.clear("day-"+selDate);CACHE.clear("week-");prefetchedWeek=null;prefetchInFlight=null;
+      loadDay(selDate);
+      setSaving(false);
+    }).catch(function(){setMsg("Error saving");setSaving(false)});
+  }
+
+  var allLogSlots=SLOTS.concat(["workout"]);
+  var logTab=h("div",{style:{padding:"14px 18px 0"}},
+    // Date display
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}},
+      h("span",{style:{fontSize:15,fontWeight:700,color:"#1c1c1e"}},"Log for "+selDate),
+      h("div",{onClick:function(){setCalMode("day");setCalMonth(selDate.slice(0,7));setCalOpen(true)},style:{background:"#f2f2f7",padding:"6px 12px",borderRadius:10,cursor:"pointer",fontSize:13,fontWeight:600,color:"#2C6975"}},"Change date")),
+    // Slot pills - horizontal scroll
+    h("div",{style:{display:"flex",gap:8,overflowX:"auto",paddingBottom:12,WebkitOverflowScrolling:"touch"}},
+      allLogSlots.map(function(sl){
+        var isSel=logSlot===sl;
+        var meta=sl==="workout"?{label:"Workout",icon:"\uD83C\uDFCB\uFE0F"}:SLOT_META[sl];
+        if(!meta) return null;
+        var hasLogged=(dayMeals[sl]||[]).length>0;
+        return h("button",{key:sl,onClick:function(){setLogSlot(sl);setLogSearch("");setLogSelected([])},style:{background:isSel?"#2C6975":hasLogged?"#e8f5ee":"#fff",color:isSel?"#fff":hasLogged?"#1c7c3a":"#3a3a3c",border:isSel?"none":"1px solid #e5e5ea",borderRadius:20,padding:"8px 16px",fontSize:13,fontWeight:isSel?700:500,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}},
+          meta.icon+" "+meta.label+(hasLogged?" \u2713":""));})),
+    // Search bar (meals only)
+    !isWoSlot?h("div",{style:{marginBottom:12}},
+      h("input",{value:logSearch,onChange:function(e){setLogSearch(e.target.value)},placeholder:"Search "+((SLOT_META[logSlot]||{}).label||"")+" items...",style:{width:"100%",padding:"12px 16px",borderRadius:14,border:"1px solid #e5e5ea",fontSize:15,background:"#fff",boxSizing:"border-box"}})):null,
+    // Items list
+    isWoSlot?
+      h("div",null,h("div",{style:{fontSize:13,fontWeight:600,color:"#8e8e93",marginBottom:10}},"Select workout:"),
+        workouts.map(function(w,i){
+          var isSel=dayWorkout&&dayWorkout.id===w.id;
+          return h("div",{key:i,onClick:function(){pickWorkout(w)},className:"card",style:{padding:"14px 16px",marginBottom:8,background:isSel?(w.colorBg||"#e8f0fe"):"#fff",border:isSel?"2px solid "+(w.colorBorder||"#2C6975"):"none",cursor:"pointer"}},
+            h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+              h("span",{style:{fontSize:15,fontWeight:isSel?700:500}},(isSel?"\u2705 ":"")+w.icon+" "+w.name),
+              h("div",{style:{display:"flex",gap:6}},
+                h("span",{style:{fontSize:12,padding:"3px 8px",borderRadius:8,background:w.intensity==="High"?"#fff0ef":"#f2f2f7",color:w.intensity==="High"?"#ff3b30":"#636366",fontWeight:600}},w.intensity),
+                w.burn>0?h("span",{style:{fontSize:13,fontWeight:700,color:"#ff9500"}},"-"+w.burn+" kcal"):null)));})):
+      h("div",null,
+        filteredLogItems.length===0?h("div",{style:{textAlign:"center",padding:40,color:"#8e8e93"}},logSearch?"No items match \""+logSearch+"\"":"No items for this slot"):
+        filteredLogItems.map(function(item,i){
+          var isSel=logSelected.some(function(s){return s.id===item.id});
+          var isAlreadyLogged=(dayMeals[logSlot]||[]).some(function(m){return m.id===item.id||m.foodId===item.id});
+          return h("div",{key:i,onClick:function(){toggleLogItem(item)},className:"card",style:{padding:"14px 16px",marginBottom:8,cursor:"pointer",border:isSel?"2px solid #2C6975":"none",background:isSel?"#e8f5ee":isAlreadyLogged?"#f9f9f9":"#fff",opacity:isAlreadyLogged&&!isSel?0.6:1}},
+            h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+              h("div",{style:{display:"flex",alignItems:"center",gap:10}},
+                h("div",{style:{width:24,height:24,borderRadius:6,border:isSel?"none":"2px solid #d1d1d6",background:isSel?"#2C6975":"#fff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}},
+                  isSel?h("span",{style:{color:"#fff",fontSize:14,fontWeight:700}},"\u2713"):null),
+                h("div",null,
+                  h("div",{style:{fontSize:15,fontWeight:isSel?700:500,color:"#1c1c1e"}},item.name+(isAlreadyLogged?" (logged)":"")),
+                  item.desc?h("div",{style:{fontSize:12,color:"#8e8e93",marginTop:2}},item.desc):null)),
+              h("div",{style:{textAlign:"right",flexShrink:0}},
+                h("div",{style:{fontSize:14,fontWeight:700,color:"#2C6975"}},item.cal+" kcal"),
+                Number(item.p)>0?h("div",{style:{fontSize:11,color:"#8e8e93"}},"P:"+item.p+" C:"+item.c+" F:"+item.f):null)));}),
+        // Skip button
+        h("div",{style:{marginTop:4}},
+          h("button",{onClick:function(){setSkipModal(logSlot)},style:{width:"100%",padding:14,borderRadius:14,border:"1px dashed #d1d1d6",background:"#fafafa",color:"#8e8e93",fontSize:14,fontWeight:600,cursor:"pointer"}},"Skip this meal"))),
+    // Sticky save bar (meals only)
+    !isWoSlot&&logSelected.length>0?h("div",{style:{position:"fixed",bottom:74,left:0,right:0,padding:"12px 18px",background:"rgba(255,255,255,0.95)",backdropFilter:"blur(10px)",borderTop:"1px solid rgba(0,0,0,0.08)",zIndex:40}},
+      h("div",{style:{maxWidth:600,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}},
+        h("div",null,
+          h("div",{style:{fontSize:15,fontWeight:700,color:"#1c1c1e"}},logSelected.length+" item"+(logSelected.length>1?"s":"")+" selected"),
+          h("div",{style:{fontSize:13,color:"#2C6975",fontWeight:600}},logSelTotal+" kcal total")),
+        h("button",{onClick:saveLogEntries,disabled:saving,style:{padding:"12px 24px",borderRadius:14,border:"none",background:saving?"#aeaeb2":"#2C6975",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer"}},saving?"Saving...":"Save to "+(SLOT_META[logSlot]||{}).label))):null);
+
+  /* -- Dashboard Tab -- */
+  var dashTab=h("div",null,
+    h("div",{style:{padding:"14px 18px 0"}},
+      h("div",{style:{fontSize:18,fontWeight:800,color:"#1c1c1e",marginBottom:14}},"Dashboard · "+selDate)),
+    stats,dailyMacroBanner,
+    weightHist.length>0?h("div",{style:{padding:"0 18px"}},
+      h("div",{className:"card",style:{padding:16}},
+        h("div",{style:{fontSize:14,fontWeight:700,color:"#1c1c1e",marginBottom:10}},"Weight trend"),
+        h("div",{style:{height:120,display:"flex",alignItems:"flex-end",gap:3}},
+          weightHist.slice(-14).map(function(w,i){
+            var wt=Number(w.weight)||0;
+            var vals=weightHist.slice(-14).map(function(x){return Number(x.weight)||200});
+            var mn=Math.min.apply(null,vals)-2,mx=Math.max.apply(null,vals)+2;
+            var ht=mx===mn?50:((wt-mn)/(mx-mn))*100+10;
+            return h("div",{key:i,style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}},
+              h("span",{style:{fontSize:9,color:"#8e8e93"}},wt),
+              h("div",{style:{width:"100%",height:ht,background:"linear-gradient(180deg,#2C6975,#5ac8fa)",borderRadius:"3px 3px 0 0",minHeight:4}}),
+              h("span",{style:{fontSize:7,color:"#aeaeb2"}},w.date.slice(5)));})))):null);
+
+  /* -- Today Tab (Phase 4: sorted logged/unlogged) -- */
+  var loggedSlots=SLOTS.filter(function(sl){return(dayMeals[sl]||[]).length>0});
+  var unloggedSlots=SLOTS.filter(function(sl){return(dayMeals[sl]||[]).length===0});
+
+  var todayTab=h("div",null,dateStrip,
+    dayLoading?h("div",{style:{textAlign:"center",padding:60}},h("div",{style:{fontSize:44}},"\uD83C\uDF7D\uFE0F"),h("div",{style:{color:"#8e8e93",fontSize:16,marginTop:12}},"Loading\u2026")):
+    h("div",{style:{paddingTop:12}},stats,levo,
+      // Logged meals section
+      loggedSlots.length>0?h("div",{style:{padding:"0 18px 4px"}},
+        h("div",{style:{fontSize:12,fontWeight:600,color:"#50C878",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:6}},"\u2705 Logged ("+loggedSlots.length+")")):null,
+      loggedSlots.map(function(slot){return mealCards.find(function(mc){return mc&&mc.key===slot})||null}),
+      // Unlogged meals section
+      unloggedSlots.length>0?h("div",{style:{padding:"0 18px 4px",marginTop:8}},
+        h("div",{style:{fontSize:12,fontWeight:600,color:"#ff9500",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:6}},"\u23F3 Not yet logged ("+unloggedSlots.length+")")):null,
+      unloggedSlots.map(function(slot){return mealCards.find(function(mc){return mc&&mc.key===slot})||null}),
+      woCard,noEat,skipWarn,saveBtn));
+
+  /* -- Bottom Tabs (Phase 2: 5 tabs) -- */
+  var tabs=[{k:"log",l:"Log",ic:"\u270F\uFE0F"},{k:"today",l:"Today",ic:"\uD83D\uDCC5"},{k:"week",l:"Week",ic:"\uD83D\uDCC8"},{k:"weight",l:"Body",ic:"\u2696\uFE0F"},{k:"dash",l:"Dashboard",ic:"\uD83D\uDCCA"}];
+  var bottomBar=h("div",{style:{position:"fixed",bottom:0,left:0,right:0,background:"rgba(255,255,255,0.92)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:"1px solid rgba(0,0,0,0.08)",display:"flex",justifyContent:"space-around",padding:"8px 0 20px",zIndex:50}},
     tabs.map(function(t){
       var isSel=tab===t.k;
-      return h("button",{key:t.k,onClick:function(){setTab(t.k)},style:{background:"none",border:"none",cursor:"pointer",textAlign:"center",padding:"4px 20px",borderRadius:10,color:isSel?"#2C6975":"#8e8e93"}},
-        h("div",{style:{fontSize:26}},t.ic),
-        h("div",{style:{fontSize:11,fontWeight:isSel?700:500,marginTop:2,letterSpacing:"-0.1px"}},t.l))}));
+      return h("button",{key:t.k,onClick:function(){setTab(t.k)},style:{background:"none",border:"none",cursor:"pointer",textAlign:"center",padding:"4px 10px",borderRadius:10,color:isSel?"#2C6975":"#8e8e93"}},
+        h("div",{style:{fontSize:22}},t.ic),
+        h("div",{style:{fontSize:10,fontWeight:isSel?700:500,marginTop:2,letterSpacing:"-0.1px"}},t.l))}));
 
   /* -- Content -- */
   var content=h("div",{style:{maxWidth:600,margin:"0 auto"}},
-    tab==="today"?todayTab:tab==="week"?weekTab:tab==="weight"?weightTab:settingsTab);
+    tab==="log"?logTab:tab==="today"?todayTab:tab==="week"?weekTab:tab==="weight"?weightTab:dashTab);
 
-  return h("div",{style:{paddingBottom:96,background:"#f2f2f7",minHeight:"100vh"}},toast,calModal,skipMod,header,content,bottomBar);
+  return h("div",{style:{paddingBottom:96,background:"#f2f2f7",minHeight:"100vh"}},toast,calModal,skipMod,settingsPanel,header,content,bottomBar);
 }
 
 /* ===== RENDER ===== */
