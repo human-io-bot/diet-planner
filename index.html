@@ -1065,43 +1065,65 @@ function App(){
                 h("span",{style:{fontSize:12,padding:"3px 8px",borderRadius:8,background:w.intensity==="High"?"#fff0ef":"#f2f2f7",color:w.intensity==="High"?"#ff3b30":"#636366",fontWeight:600}},w.intensity),
                 w.burn>0?h("span",{style:{fontSize:13,fontWeight:700,color:"#ff9500"}},"-"+w.burn+" kcal"):null)));})):
       h("div",null,
-        // Logged items for this slot at top (edit mode)
-        loggedForSlot.length>0?h("div",null,
-          h("div",{style:{fontSize:11,fontWeight:600,color:"#1c7c3a",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:6,display:"flex",alignItems:"center",gap:6}},"\u2705 Already logged",
-            h("span",{style:{fontSize:9,background:"#fff0ef",color:"#ff9500",padding:"2px 8px",borderRadius:6,fontWeight:600}},"edit")),
-          loggedForSlot.map(function(m,i){
-            return h("div",{key:"lg-"+i,className:"card",style:{padding:"10px 12px",marginBottom:6,border:"2px solid #50C878",background:"#f0fff4",display:"flex",alignItems:"center",gap:8}},
-              h("div",{style:{width:20,height:20,borderRadius:5,background:"#50C878",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}},
-                h("span",{style:{color:"#fff",fontSize:11,fontWeight:700}},"\u2713")),
-              h("div",{style:{flex:1,minWidth:0}},
-                h("div",{style:{fontSize:13,fontWeight:600,color:"#1c1c1e"}},m.name||m.foodName),
-                h("div",{style:{fontSize:9,color:"#8e8e93"}},"P:"+(m.protein||m.p||0)+"g C:"+(m.carbs||m.c||0)+"g F:"+(m.fat||m.f||0)+"g")),
-              h("div",{style:{textAlign:"right",minWidth:40,flexShrink:0}},
-                h("div",{style:{fontSize:11,fontWeight:700,color:"#2C6975"}},m.cal||0),
-                h("div",{style:{fontSize:9,color:"#8e8e93"}},"kcal")),
-              h("div",{onClick:function(){removeLoggedItem(logSlot,m.id||m.foodId)},style:{width:22,height:22,borderRadius:6,background:"#fff0ef",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#ff3b30",flexShrink:0,cursor:"pointer"}},"\u2715"));}),
-          h("div",{style:{fontSize:11,fontWeight:600,color:"#8e8e93",textTransform:"uppercase",letterSpacing:"0.5px",margin:"10px 0 6px"}},"Add more items")):null,
         // Search
         h("div",{style:{marginBottom:8}},
           h("input",{value:logSearch,onChange:function(e){setLogSearch(e.target.value)},placeholder:"Search "+((SLOT_META[logSlot]||{}).label||"")+" items...",style:{width:"100%",padding:"10px 14px",borderRadius:12,border:"1px solid #e5e5ea",fontSize:14,background:"#fff",boxSizing:"border-box"}})),
-        filteredLogItems.length===0?h("div",{style:{textAlign:"center",padding:40,color:"#8e8e93"}},logSearch?"No items match \""+logSearch+"\"":"No items for this slot"):
-        filteredLogItems.map(function(item,i){
-          var selItem=logSelected.find(function(s){return s.id===item.id});
-          var isSel=!!selItem;
-          var qty=selItem?selItem.qty:1;
-          var adjCal=Math.round((Number(item.cal)||0)*qty);
-          var isAlreadyLogged=loggedForSlot.some(function(m){return(m.id||m.foodId)===item.id});
-          if(isAlreadyLogged) return null; // already shown at top
-          return h("div",{key:i,onClick:function(){if(!isSel)toggleLogItem(item)},className:"card",style:{padding:"10px 12px",marginBottom:6,cursor:"pointer",border:isSel?"2px solid #2C6975":"none",background:isSel?"#e8f5ee":"#fff",display:"flex",alignItems:"center",gap:8}},
-            h("div",{onClick:function(){toggleLogItem(item)},style:{width:20,height:20,borderRadius:5,border:isSel?"none":"2px solid #d1d1d6",background:isSel?"#2C6975":"#fff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}},
-              isSel?h("span",{style:{color:"#fff",fontSize:11,fontWeight:700}},"\u2713"):null),
-            h("div",{style:{flex:1,minWidth:0}},
-              h("div",{style:{fontSize:13,fontWeight:isSel?600:500,color:"#1c1c1e"}},item.name),
-              h("div",{style:{fontSize:9,color:"#8e8e93"}},"P:"+(item.p||0)+"g C:"+(item.c||0)+"g F:"+(item.f||0)+"g")),
-            isSel?qtyStepperEl(item.id,qty):null,
-            h("div",{style:{textAlign:"right",minWidth:40,flexShrink:0}},
-              h("div",{style:{fontSize:11,fontWeight:700,color:"#2C6975"}},isSel?adjCal:item.cal),
-              h("div",{style:{fontSize:9,color:"#8e8e93"}},"kcal")));}),
+        // Build unified sorted list: logged items first, then unlogged
+        (function(){
+          // Match helper: handles foodId vs id mismatch
+          function matchId(menuItem,loggedItem){
+            var mid=String(menuItem.id||"").toLowerCase();
+            var lid=String(loggedItem.id||loggedItem.foodId||"").toLowerCase();
+            return mid===lid;
+          }
+          // Split filtered items into logged and unlogged
+          var loggedItems=[];var unloggedItems=[];
+          filteredLogItems.forEach(function(item){
+            var loggedMatch=loggedForSlot.find(function(m){return matchId(item,m)});
+            if(loggedMatch) loggedItems.push({item:item,logged:loggedMatch});
+            else unloggedItems.push(item);
+          });
+          // Also find logged items NOT in the filtered menu (custom/renamed)
+          loggedForSlot.forEach(function(m){
+            var inMenu=logSlotItems.some(function(it){return matchId(it,m)});
+            if(!inMenu){
+              loggedItems.push({item:{id:m.id||m.foodId,name:m.name||m.foodName,desc:m.desc||"",cal:m.cal||0,p:m.protein||m.p||0,c:m.carbs||m.c||0,f:m.fat||m.f||0},logged:m});
+            }
+          });
+          var sortedItems=loggedItems.map(function(li){return{item:li.item,isLogged:true}}).concat(unloggedItems.map(function(it){return{item:it,isLogged:false}}));
+          if(sortedItems.length===0) return h("div",{style:{textAlign:"center",padding:40,color:"#8e8e93"}},logSearch?"No items match \""+logSearch+"\"":"No items for this slot");
+          return sortedItems.map(function(entry,i){
+            var item=entry.item;var isLogged=entry.isLogged;
+            var selItem=logSelected.find(function(s){return s.id===item.id});
+            var isSel=!!selItem;
+            var qty=selItem?selItem.qty:1;
+            var adjCal=Math.round((Number(item.cal)||0)*qty);
+            // Logged: green check + qty stepper + delete X
+            if(isLogged){
+              return h("div",{key:"i-"+i,className:"card",style:{padding:"10px 12px",marginBottom:6,border:"2px solid #50C878",background:"#f0fff4",display:"flex",alignItems:"center",gap:8}},
+                h("div",{onClick:function(){removeLoggedItem(logSlot,item.id)},style:{width:20,height:20,borderRadius:5,background:"#50C878",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"},title:"Remove"},
+                  h("span",{style:{color:"#fff",fontSize:11,fontWeight:700}},"\u2713")),
+                h("div",{style:{flex:1,minWidth:0}},
+                  h("div",{style:{fontSize:13,fontWeight:600,color:"#1c1c1e"}},item.name),
+                  h("div",{style:{fontSize:9,color:"#8e8e93"}},"P:"+(item.p||0)+"g C:"+(item.c||0)+"g F:"+(item.f||0)+"g")),
+                h("div",{style:{textAlign:"right",minWidth:40,flexShrink:0}},
+                  h("div",{style:{fontSize:11,fontWeight:700,color:"#50C878"}},item.cal),
+                  h("div",{style:{fontSize:9,color:"#8e8e93"}},"kcal")),
+                h("div",{onClick:function(){removeLoggedItem(logSlot,item.id)},style:{width:22,height:22,borderRadius:6,background:"#fff0ef",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#ff3b30",flexShrink:0,cursor:"pointer"}},"\u2715"));
+            }
+            // Unlogged: checkbox + optional qty stepper when selected
+            return h("div",{key:"i-"+i,onClick:function(){if(!isSel)toggleLogItem(item)},className:"card",style:{padding:"10px 12px",marginBottom:6,cursor:"pointer",border:isSel?"2px solid #2C6975":"none",background:isSel?"#e8f5ee":"#fff",display:"flex",alignItems:"center",gap:8}},
+              h("div",{onClick:function(e){e.stopPropagation();toggleLogItem(item)},style:{width:20,height:20,borderRadius:5,border:isSel?"none":"2px solid #d1d1d6",background:isSel?"#2C6975":"#fff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}},
+                isSel?h("span",{style:{color:"#fff",fontSize:11,fontWeight:700}},"\u2713"):null),
+              h("div",{style:{flex:1,minWidth:0}},
+                h("div",{style:{fontSize:13,fontWeight:isSel?600:500,color:"#1c1c1e"}},item.name),
+                h("div",{style:{fontSize:9,color:"#8e8e93"}},"P:"+(item.p||0)+"g C:"+(item.c||0)+"g F:"+(item.f||0)+"g")),
+              isSel?qtyStepperEl(item.id,qty):null,
+              h("div",{style:{textAlign:"right",minWidth:40,flexShrink:0}},
+                h("div",{style:{fontSize:11,fontWeight:700,color:"#2C6975"}},isSel?adjCal:item.cal),
+                h("div",{style:{fontSize:9,color:"#8e8e93"}},"kcal")));
+          });
+        })(),
         // Skip button
         h("div",{style:{marginTop:4}},
           h("button",{onClick:function(){setSkipModal(logSlot)},style:{width:"100%",padding:14,borderRadius:14,border:"1px dashed #d1d1d6",background:"#fafafa",color:"#8e8e93",fontSize:14,fontWeight:600,cursor:"pointer"}},"Skip this meal"))),
@@ -1111,7 +1133,7 @@ function App(){
         h("div",null,
           h("div",{style:{fontSize:15,fontWeight:700,color:"#1c1c1e"}},logSelected.length+" item"+(logSelected.length>1?"s":"")+" selected"),
           h("div",{style:{fontSize:13,color:"#2C6975",fontWeight:600}},logSelTotal+" kcal total")),
-        h("button",{onClick:saveLogEntries,disabled:saving,style:{padding:"12px 24px",borderRadius:14,border:"none",background:saving?"#aeaeb2":"#2C6975",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer"}},saving?"Saving...":"Save to "+(SLOT_META[logSlot]||{}).label))):null);
+        h("button",{onClick:saveLogEntries,disabled:saving,style:{padding:"12px 24px",borderRadius:14,border:"none",background:saving?"#aeaeb2":"#2C6975",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer"}},saving?"Saving...":loggedForSlot.length>0?"Update "+(SLOT_META[logSlot]||{}).label:"Save to "+(SLOT_META[logSlot]||{}).label))):null);
 
   /* -- Dashboard Tab -- */
   var dashTab=h("div",null,
