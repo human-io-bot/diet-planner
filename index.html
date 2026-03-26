@@ -1010,15 +1010,17 @@ function App(){
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}},
       h("span",{style:{fontSize:15,fontWeight:700,color:"#1c1c1e"}},"Log for "+selDate),
       h("div",{onClick:function(){setCalMode("day");setCalMonth(selDate.slice(0,7));setCalOpen(true)},style:{background:"#f2f2f7",padding:"6px 12px",borderRadius:10,cursor:"pointer",fontSize:13,fontWeight:600,color:"#2C6975"}},"Change date")),
-    // Slot pills - horizontal scroll
-    h("div",{style:{display:"flex",gap:8,overflowX:"auto",paddingBottom:12,WebkitOverflowScrolling:"touch"}},
+    // Slot pills - 2x5 wrap grid
+    h("div",{style:{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6,paddingBottom:12}},
       allLogSlots.map(function(sl){
         var isSel=logSlot===sl;
         var meta=sl==="workout"?{label:"Workout",icon:"\uD83C\uDFCB\uFE0F"}:SLOT_META[sl];
         if(!meta) return null;
-        var hasLogged=(dayMeals[sl]||[]).length>0;
-        return h("button",{key:sl,onClick:function(){setLogSlot(sl);setLogSearch("");setLogSelected([])},style:{background:isSel?"#2C6975":hasLogged?"#e8f5ee":"#fff",color:isSel?"#fff":hasLogged?"#1c7c3a":"#3a3a3c",border:isSel?"none":"1px solid #e5e5ea",borderRadius:20,padding:"8px 16px",fontSize:13,fontWeight:isSel?700:500,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}},
-          meta.icon+" "+meta.label+(hasLogged?" \u2713":""));})),
+        var hasLogged=sl==="workout"?(dayWorkout!==null):(dayMeals[sl]||[]).length>0;
+        var shortLabel=sl==="workout"?"Workout":meta.label.length>7?meta.label.slice(0,6)+".":meta.label;
+        return h("button",{key:sl,onClick:function(){setLogSlot(sl);setLogSearch("");setLogSelected([])},style:{background:isSel?"#2C6975":hasLogged?"#e8f5ee":"#fff",color:isSel?"#fff":hasLogged?"#1c7c3a":"#3a3a3c",border:isSel?"none":"1px solid #e5e5ea",borderRadius:12,padding:"7px 2px",fontSize:10,fontWeight:isSel?700:500,cursor:"pointer",textAlign:"center",lineHeight:1.3,minWidth:0}},
+          h("div",{style:{fontSize:16}},meta.icon),
+          h("div",{style:{marginTop:2}},shortLabel+(hasLogged?" \u2713":"")));})),
     // Search bar (meals only)
     !isWoSlot?h("div",{style:{marginBottom:12}},
       h("input",{value:logSearch,onChange:function(e){setLogSearch(e.target.value)},placeholder:"Search "+((SLOT_META[logSlot]||{}).label||"")+" items...",style:{width:"100%",padding:"12px 16px",borderRadius:14,border:"1px solid #e5e5ea",fontSize:15,background:"#fff",boxSizing:"border-box"}})):null,
