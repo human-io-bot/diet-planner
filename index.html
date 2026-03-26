@@ -10,8 +10,6 @@
 <title>NAV.WINS</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180x180.png">
-<link rel="apple-touch-icon" sizes="152x152" href="./icons/icon-152x152.png">
-<link rel="apple-touch-icon" sizes="120x120" href="./icons/icon-120x120.png">
 <link rel="icon" type="image/png" sizes="32x32" href="./icons/icon-80x80.png">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -24,7 +22,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 <script>
 (function(){
   // NAV.WINS icons are now PNG files in ./icons/ folder
-  // No canvas drawing needed
 })();
 </script>
 </head>
@@ -53,7 +50,7 @@ var DAY_LABELS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Sat
 var SKIP={id:"skip",name:"Skip / NA",desc:"Skipping this meal",cal:0,p:0,c:0,f:0,isSkip:true};
 var SKIP_REASONS=["Not hungry","Nausea (Zepbound)","Fasting","Running late","Ate out","Other"];
 var MENU_MAP={bf:"bf",coffee:["cf","cf2"],main:["lu","dn"],snack:["ms","es"],protein:["lp","dp"]};
-var CACHE_VER="11";
+var CACHE_VER="12";
 
 /* ===== UTILITIES ===== */
 var LS={
@@ -444,7 +441,7 @@ function App(){
         h("div",{style:{textAlign:"center",marginBottom:28}},
           h("div",{style:{marginBottom:16,display:"flex",justifyContent:"center"}},NavIcon(88)),
           h("div",{style:{marginBottom:8,display:"flex",justifyContent:"center"}},NavWordmark(30,"#1c1c1e")),
-          h("p",{style:{margin:0,fontSize:12,color:"#8e8e93",letterSpacing:"3px"}},"TRACK \u00B7 TRANSFORM \u00B7 THRIVE")),
+          h("p",{style:{margin:0,fontSize:14,color:"#8e8e93",letterSpacing:"0.3px"}},"TRACK \u00B7 TRANSFORM \u00B7 THRIVE")),
         h("div",{className:"card",style:{padding:24}},
           step===1?h("div",null,
             h("div",{style:{fontSize:13,fontWeight:600,color:"#8e8e93",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:8}},"Step 1 of 2 — Web App URL"),
@@ -785,7 +782,7 @@ function App(){
       h("span",{style:{fontSize:14,color:"#c0392b",fontWeight:500,lineHeight:1.4}},skCount+" meals skipped — try to eat at least 3 meals on Zepbound."))):null;
 
   var saveBtn=h("div",{style:{padding:"8px 18px 16px"}},
-    h("button",{onClick:saveDay,disabled:saving,style:{width:"100%",padding:18,borderRadius:16,border:"none",background:saving?"#aeaeb2":"linear-gradient(135deg,#2C6975,#50C878)",color:"#fff",fontSize:17,fontWeight:700,cursor:"pointer",letterSpacing:"-0.2px",boxShadow:saving?"none":"0 4px 16px rgba(10,132,255,0.3)"}},saving?"Saving…":"\uD83D\uDCBE Save Today's Plan"));
+    h("button",{onClick:saveDay,disabled:saving,style:{width:"100%",padding:18,borderRadius:16,border:"none",background:saving?"#aeaeb2":"linear-gradient(135deg,#2C6975,#50C878)",color:"#fff",fontSize:17,fontWeight:700,cursor:"pointer",letterSpacing:"-0.2px",boxShadow:saving?"none":"0 4px 16px rgba(44,105,117,0.3)"}},saving?"Saving…":"\uD83D\uDCBE Save Today's Plan"));
 
   /* -- Today Tab -- */
   var todayTab=h("div",null,dateStrip,
@@ -921,7 +918,7 @@ function App(){
             h("div",{style:{fontSize:28,fontWeight:800,color:sl.color,marginBottom:6}},wf[sl.k]),
             h("input",{value:wf[sl.k],onChange:function(e){var val=e.target.value;setWf(function(p){var n=Object.assign({},p);n[sl.k]=val;return n})},type:"range",min:"1",max:"10",style:{width:"100%"}}));
         })),
-      h("button",{onClick:saveWeight,disabled:saving,style:{width:"100%",marginTop:16,padding:16,borderRadius:14,border:"none",background:saving?"#aeaeb2":"linear-gradient(135deg,#2C6975,#50C878)",color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer",boxShadow:saving?"none":"0 4px 14px rgba(10,132,255,0.28)"}},saving?"Saving…":"Save Weight Log")),
+      h("button",{onClick:saveWeight,disabled:saving,style:{width:"100%",marginTop:16,padding:16,borderRadius:14,border:"none",background:saving?"#aeaeb2":"linear-gradient(135deg,#2C6975,#50C878)",color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer",boxShadow:saving?"none":"0 4px 14px rgba(44,105,117,0.28)"}},saving?"Saving…":"Save Weight Log")),
     h("div",{className:"card",style:{padding:20}},
       h("div",{style:{fontSize:15,fontWeight:700,color:"#1c1c1e",marginBottom:14}},"Weight Trend"),
       weightHist.length===0?h("p",{style:{fontSize:15,color:"#aeaeb2",textAlign:"center",padding:"20px 0"}},"No data yet. Start logging!"):
