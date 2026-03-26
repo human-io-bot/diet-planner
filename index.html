@@ -906,9 +906,9 @@ function App(){
     });
     apiPost({action:"logFullDay",date:selDate,meals:meals,workout:dayWorkout?{workoutId:dayWorkout.id,workoutName:dayWorkout.name,duration:dayWorkout.dur,burn:dayWorkout.burn,intensity:dayWorkout.intensity}:null}).then(function(r){
       CACHE.clear("day-"+selDate);CACHE.clear("week-");prefetchedWeek=null;prefetchInFlight=null;
-      setSaving(false);setMsg("Item removed");
+      setSaving(false);setMsg("Item removed");setTimeout(function(){setMsg("")},3000);
       api("getDayFull",{date:selDate}).then(function(r2){if(r2.success){CACHE.set("day-"+selDate,r2,false);applyDayData(r2)}});
-    }).catch(function(){setSaving(false);setMsg("Error removing item")});
+    }).catch(function(){setSaving(false);setMsg("Error removing item");setTimeout(function(){setMsg("")},3000)});
   }
   function saveLogEntries(){
     if(isWoSlot) return;
@@ -931,12 +931,12 @@ function App(){
       });
     });
     apiPost({action:"logFullDay",date:selDate,meals:meals,workout:dayWorkout?{workoutId:dayWorkout.id,workoutName:dayWorkout.name,duration:dayWorkout.dur,burn:dayWorkout.burn,intensity:dayWorkout.intensity}:null}).then(function(r){
-      setMsg(logSelected.length+" item"+(logSelected.length>1?"s":"")+" saved to "+SLOT_META[logSlot].label);
+      setMsg(logSelected.length+" item"+(logSelected.length>1?"s":"")+" saved to "+SLOT_META[logSlot].label);setTimeout(function(){setMsg("")},3000);
       setLogSelected([]);
       CACHE.clear("day-"+selDate);CACHE.clear("week-");prefetchedWeek=null;prefetchInFlight=null;
       setSaving(false);
       api("getDayFull",{date:selDate}).then(function(r2){if(r2.success){CACHE.set("day-"+selDate,r2,false);applyDayData(r2)}});
-    }).catch(function(){setMsg("Error saving");setSaving(false)});
+    }).catch(function(){setMsg("Error saving");setSaving(false);setTimeout(function(){setMsg("")},3000)});
   }
 
   // Inline qty stepper component
