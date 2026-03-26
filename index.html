@@ -974,26 +974,47 @@ function App(){
         h("p",{style:{fontSize:13,color:"#78350f",lineHeight:1.5,margin:0}},"Open Google Sheet \u2192 Settings tab \u2192 edit column B. Add foods in FoodMenu tab.")),
       h("button",{onClick:logout,style:{width:"100%",padding:16,borderRadius:14,border:"none",background:"#fff0ef",color:"#ff3b30",fontSize:16,fontWeight:600,cursor:"pointer"}},"Disconnect & Reset"))):null;
 
-  /* -- Log Tab (Phase 3) -- */
+  /* -- Log Tab (Phase 3 + Qty) -- */
   var isWoSlot=logSlot==="workout";
   var logSlotItems=isWoSlot?[]:((menu||{})[logSlot]||[]);
   var filteredLogItems=logSearch.trim()?logSlotItems.filter(function(it){return(it.name||"").toLowerCase().indexOf(logSearch.toLowerCase())>-1||(it.desc||"").toLowerCase().indexOf(logSearch.toLowerCase())>-1}):logSlotItems;
-  var logSelTotal=logSelected.reduce(function(s,it){return s+(Number(it.cal)||0)},0);
+  var logSelTotal=logSelected.reduce(function(s,it){return s+Math.round((Number(it.cal)||0)*(it.qty||1))},0);
+  var loggedForSlot=(dayMeals[logSlot]||[]).filter(function(m){return!m.isSkip});
 
   function toggleLogItem(item){
     var exists=logSelected.some(function(s){return s.id===item.id});
     if(exists) setLogSelected(logSelected.filter(function(s){return s.id!==item.id}));
-    else setLogSelected(logSelected.concat([item]));
+    else setLogSelected(logSelected.concat([Object.assign({},item,{qty:1})]));
+  }
+  function setLogQty(id,delta){
+    setLogSelected(logSelected.map(function(s){
+      if(s.id!==id) return s;
+      var nq=Math.max(0.5,Math.round(((s.qty||1)+delta)*10)/10);
+      return Object.assign({},s,{qty:nq});
+    }));
+  }
+  function removeLoggedItem(slot,foodId){
+    // Remove a single logged item by re-saving without it
+    var remaining=(dayMeals[slot]||[]).filter(function(m){return(m.id||m.foodId)!==foodId&&!m.isSkip});
+    setSaving(true);
+    // Delete all for this slot then re-add remaining
+    apiPost({action:"logMeal",date:selDate,slot:slot,skipped:true,skipReason:"temp"}).then(function(){
+      if(remaining.length===0){
+        CACHE.clear("day-"+selDate);CACHE.clear("week-");prefetchedWeek=null;prefetchInFlight=null;
+        loadDay(selDate);setSaving(false);setMsg("Item removed");return;
+      }
+      var ps=remaining.map(function(m){return apiPost({action:"logMeal",date:selDate,slot:slot,foodId:m.id||m.foodId,foodName:m.name||m.foodName,desc:m.desc||"",cal:Number(m.cal)||0,protein:Number(m.protein||m.p)||0,carbs:Number(m.carbs||m.c)||0,fat:Number(m.fat||m.f)||0,skipped:false})});
+      Promise.all(ps).then(function(){CACHE.clear("day-"+selDate);CACHE.clear("week-");prefetchedWeek=null;prefetchInFlight=null;loadDay(selDate);setSaving(false);setMsg("Item removed")});
+    }).catch(function(){setSaving(false);setMsg("Error removing item")});
   }
   function saveLogEntries(){
     if(isWoSlot) return;
     if(logSelected.length===0) return;
     setSaving(true);
     var date=selDate;
-    var day=DAY_LABELS[dayOfWeek(date)];
-    // Remove existing entries for this slot, then add new ones
     var promises=logSelected.map(function(item){
-      return apiPost({action:"logMeal",date:date,slot:logSlot,foodId:item.id,foodName:item.name,desc:item.desc||"",cal:Number(item.cal)||0,protein:Number(item.p)||0,carbs:Number(item.c)||0,fat:Number(item.f)||0,skipped:false});
+      var q=item.qty||1;
+      return apiPost({action:"logMeal",date:date,slot:logSlot,foodId:item.id,foodName:item.name+(q!==1?" x"+q:""),desc:item.desc||"",cal:Math.round((Number(item.cal)||0)*q),protein:Math.round((Number(item.p)||0)*q),carbs:Math.round((Number(item.c)||0)*q),fat:Math.round((Number(item.f)||0)*q),skipped:false});
     });
     Promise.all(promises).then(function(){
       setMsg(logSelected.length+" item"+(logSelected.length>1?"s":"")+" saved to "+SLOT_META[logSlot].label);
@@ -1002,6 +1023,14 @@ function App(){
       loadDay(selDate);
       setSaving(false);
     }).catch(function(){setMsg("Error saving");setSaving(false)});
+  }
+
+  // Inline qty stepper component
+  function qtyStepperEl(id,qty){
+    return h("div",{style:{display:"flex",alignItems:"center",borderRadius:6,overflow:"hidden",border:"1px solid #e5e5ea",flexShrink:0},onClick:function(e){e.stopPropagation()}},
+      h("div",{onClick:function(){setLogQty(id,-0.5)},style:{width:28,height:26,background:"#f2f2f7",border:"none",fontSize:14,fontWeight:700,color:"#2C6975",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}},"\u2212"),
+      h("div",{style:{width:34,height:26,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:qty!==1?"#2C6975":"#1c1c1e",background:"#fff",borderLeft:"1px solid #e5e5ea",borderRight:"1px solid #e5e5ea"}},qty),
+      h("div",{onClick:function(){setLogQty(id,0.5)},style:{width:28,height:26,background:"#f2f2f7",border:"none",fontSize:14,fontWeight:700,color:"#2C6975",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}},"+"));
   }
 
   var allLogSlots=SLOTS.concat(["workout"]);
@@ -1036,21 +1065,43 @@ function App(){
                 h("span",{style:{fontSize:12,padding:"3px 8px",borderRadius:8,background:w.intensity==="High"?"#fff0ef":"#f2f2f7",color:w.intensity==="High"?"#ff3b30":"#636366",fontWeight:600}},w.intensity),
                 w.burn>0?h("span",{style:{fontSize:13,fontWeight:700,color:"#ff9500"}},"-"+w.burn+" kcal"):null)));})):
       h("div",null,
+        // Logged items for this slot at top (edit mode)
+        loggedForSlot.length>0?h("div",null,
+          h("div",{style:{fontSize:11,fontWeight:600,color:"#1c7c3a",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:6,display:"flex",alignItems:"center",gap:6}},"\u2705 Already logged",
+            h("span",{style:{fontSize:9,background:"#fff0ef",color:"#ff9500",padding:"2px 8px",borderRadius:6,fontWeight:600}},"edit")),
+          loggedForSlot.map(function(m,i){
+            return h("div",{key:"lg-"+i,className:"card",style:{padding:"10px 12px",marginBottom:6,border:"2px solid #50C878",background:"#f0fff4",display:"flex",alignItems:"center",gap:8}},
+              h("div",{style:{width:20,height:20,borderRadius:5,background:"#50C878",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}},
+                h("span",{style:{color:"#fff",fontSize:11,fontWeight:700}},"\u2713")),
+              h("div",{style:{flex:1,minWidth:0}},
+                h("div",{style:{fontSize:13,fontWeight:600,color:"#1c1c1e"}},m.name||m.foodName),
+                h("div",{style:{fontSize:9,color:"#8e8e93"}},"P:"+(m.protein||m.p||0)+"g C:"+(m.carbs||m.c||0)+"g F:"+(m.fat||m.f||0)+"g")),
+              h("div",{style:{textAlign:"right",minWidth:40,flexShrink:0}},
+                h("div",{style:{fontSize:11,fontWeight:700,color:"#2C6975"}},m.cal||0),
+                h("div",{style:{fontSize:9,color:"#8e8e93"}},"kcal")),
+              h("div",{onClick:function(){removeLoggedItem(logSlot,m.id||m.foodId)},style:{width:22,height:22,borderRadius:6,background:"#fff0ef",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#ff3b30",flexShrink:0,cursor:"pointer"}},"\u2715"));}),
+          h("div",{style:{fontSize:11,fontWeight:600,color:"#8e8e93",textTransform:"uppercase",letterSpacing:"0.5px",margin:"10px 0 6px"}},"Add more items")):null,
+        // Search
+        h("div",{style:{marginBottom:8}},
+          h("input",{value:logSearch,onChange:function(e){setLogSearch(e.target.value)},placeholder:"Search "+((SLOT_META[logSlot]||{}).label||"")+" items...",style:{width:"100%",padding:"10px 14px",borderRadius:12,border:"1px solid #e5e5ea",fontSize:14,background:"#fff",boxSizing:"border-box"}})),
         filteredLogItems.length===0?h("div",{style:{textAlign:"center",padding:40,color:"#8e8e93"}},logSearch?"No items match \""+logSearch+"\"":"No items for this slot"):
         filteredLogItems.map(function(item,i){
-          var isSel=logSelected.some(function(s){return s.id===item.id});
-          var isAlreadyLogged=(dayMeals[logSlot]||[]).some(function(m){return m.id===item.id||m.foodId===item.id});
-          return h("div",{key:i,onClick:function(){toggleLogItem(item)},className:"card",style:{padding:"14px 16px",marginBottom:8,cursor:"pointer",border:isSel?"2px solid #2C6975":"none",background:isSel?"#e8f5ee":isAlreadyLogged?"#f9f9f9":"#fff",opacity:isAlreadyLogged&&!isSel?0.6:1}},
-            h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
-              h("div",{style:{display:"flex",alignItems:"center",gap:10}},
-                h("div",{style:{width:24,height:24,borderRadius:6,border:isSel?"none":"2px solid #d1d1d6",background:isSel?"#2C6975":"#fff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}},
-                  isSel?h("span",{style:{color:"#fff",fontSize:14,fontWeight:700}},"\u2713"):null),
-                h("div",null,
-                  h("div",{style:{fontSize:15,fontWeight:isSel?700:500,color:"#1c1c1e"}},item.name+(isAlreadyLogged?" (logged)":"")),
-                  item.desc?h("div",{style:{fontSize:12,color:"#8e8e93",marginTop:2}},item.desc):null)),
-              h("div",{style:{textAlign:"right",flexShrink:0}},
-                h("div",{style:{fontSize:14,fontWeight:700,color:"#2C6975"}},item.cal+" kcal"),
-                Number(item.p)>0?h("div",{style:{fontSize:11,color:"#8e8e93"}},"P:"+item.p+" C:"+item.c+" F:"+item.f):null)));}),
+          var selItem=logSelected.find(function(s){return s.id===item.id});
+          var isSel=!!selItem;
+          var qty=selItem?selItem.qty:1;
+          var adjCal=Math.round((Number(item.cal)||0)*qty);
+          var isAlreadyLogged=loggedForSlot.some(function(m){return(m.id||m.foodId)===item.id});
+          if(isAlreadyLogged) return null; // already shown at top
+          return h("div",{key:i,onClick:function(){if(!isSel)toggleLogItem(item)},className:"card",style:{padding:"10px 12px",marginBottom:6,cursor:"pointer",border:isSel?"2px solid #2C6975":"none",background:isSel?"#e8f5ee":"#fff",display:"flex",alignItems:"center",gap:8}},
+            h("div",{onClick:function(){toggleLogItem(item)},style:{width:20,height:20,borderRadius:5,border:isSel?"none":"2px solid #d1d1d6",background:isSel?"#2C6975":"#fff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}},
+              isSel?h("span",{style:{color:"#fff",fontSize:11,fontWeight:700}},"\u2713"):null),
+            h("div",{style:{flex:1,minWidth:0}},
+              h("div",{style:{fontSize:13,fontWeight:isSel?600:500,color:"#1c1c1e"}},item.name),
+              h("div",{style:{fontSize:9,color:"#8e8e93"}},"P:"+(item.p||0)+"g C:"+(item.c||0)+"g F:"+(item.f||0)+"g")),
+            isSel?qtyStepperEl(item.id,qty):null,
+            h("div",{style:{textAlign:"right",minWidth:40,flexShrink:0}},
+              h("div",{style:{fontSize:11,fontWeight:700,color:"#2C6975"}},isSel?adjCal:item.cal),
+              h("div",{style:{fontSize:9,color:"#8e8e93"}},"kcal")));}),
         // Skip button
         h("div",{style:{marginTop:4}},
           h("button",{onClick:function(){setSkipModal(logSlot)},style:{width:"100%",padding:14,borderRadius:14,border:"1px dashed #d1d1d6",background:"#fafafa",color:"#8e8e93",fontSize:14,fontWeight:600,cursor:"pointer"}},"Skip this meal"))),
@@ -1088,14 +1139,42 @@ function App(){
   var todayTab=h("div",null,dateStrip,
     dayLoading?h("div",{style:{textAlign:"center",padding:60}},h("div",{style:{fontSize:44}},"\uD83C\uDF7D\uFE0F"),h("div",{style:{color:"#8e8e93",fontSize:16,marginTop:12}},"Loading\u2026")):
     h("div",{style:{paddingTop:12}},stats,levo,
-      // Logged meals section
+      // Logged meals section - compact cards with edit
       loggedSlots.length>0?h("div",{style:{padding:"0 18px 4px"}},
         h("div",{style:{fontSize:12,fontWeight:600,color:"#50C878",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:6}},"\u2705 Logged ("+loggedSlots.length+")")):null,
-      loggedSlots.map(function(slot){return mealCards.find(function(mc){return mc&&mc.key===slot})||null}),
+      loggedSlots.map(function(slot){
+        var items=(dayMeals[slot]||[]).filter(function(m){return!m.isSkip});
+        var isSkipped=(dayMeals[slot]||[]).some(function(m){return m.isSkip});
+        var slotCal=items.reduce(function(s,m){return s+(Number(m.cal)||0)},0);
+        var meta=SLOT_META[slot];
+        if(!meta) return null;
+        var names=items.map(function(m){return m.name||m.foodName}).join(", ");
+        return h("div",{key:slot,style:{padding:"0 18px 6px"}},
+          h("div",{className:"card",style:{padding:"10px 14px",border:"1.5px solid #d4edda",background:"#f8fff8"}},
+            h("div",{style:{display:"flex",alignItems:"center",gap:10}},
+              h("span",{style:{fontSize:18}},meta.icon),
+              h("div",{style:{flex:1,minWidth:0}},
+                h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+                  h("span",{style:{fontSize:14,fontWeight:600,color:"#1c1c1e"}},meta.label),
+                  h("div",{style:{display:"flex",alignItems:"center",gap:8}},
+                    isSkipped?h("span",{style:{fontSize:12,color:"#aeaeb2"}},"Skipped"):
+                    h("span",{style:{fontSize:13,fontWeight:700,color:"#2C6975"}},slotCal+" kcal"),
+                    h("span",{onClick:function(){setTab("log");setLogSlot(slot);setLogSearch("");setLogSelected([])},style:{fontSize:13,color:"#2C6975",cursor:"pointer",padding:"2px 6px"}},"\u270F\uFE0F"))),
+                !isSkipped&&names?h("div",{style:{fontSize:12,color:"#636366",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},names):null))));}),
       // Unlogged meals section
       unloggedSlots.length>0?h("div",{style:{padding:"0 18px 4px",marginTop:8}},
         h("div",{style:{fontSize:12,fontWeight:600,color:"#ff9500",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:6}},"\u23F3 Not yet logged ("+unloggedSlots.length+")")):null,
-      unloggedSlots.map(function(slot){return mealCards.find(function(mc){return mc&&mc.key===slot})||null}),
+      unloggedSlots.map(function(slot){
+        var meta=SLOT_META[slot];
+        if(!meta) return null;
+        return h("div",{key:slot,style:{padding:"0 18px 6px"}},
+          h("div",{onClick:function(){setTab("log");setLogSlot(slot);setLogSearch("");setLogSelected([])},className:"card",style:{padding:"10px 14px",cursor:"pointer",opacity:0.7}},
+            h("div",{style:{display:"flex",alignItems:"center",gap:10}},
+              h("span",{style:{fontSize:18}},meta.icon),
+              h("div",{style:{flex:1}},
+                h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+                  h("span",{style:{fontSize:14,fontWeight:500,color:"#8e8e93"}},meta.label+" \u00B7 "+meta.time),
+                  h("span",{style:{fontSize:12,color:"#ff9500",fontWeight:600}},"Log now"))))));}),
       woCard,noEat,skipWarn,saveBtn));
 
   /* -- Bottom Tabs (Phase 2: 5 tabs) -- */
