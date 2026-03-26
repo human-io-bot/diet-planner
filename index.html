@@ -1055,7 +1055,11 @@ if("serviceWorker" in navigator){window.addEventListener("load",function(){navig
         {src:icon192,sizes:"192x192",type:"image/png",purpose:"any maskable"},
         {src:icon512,sizes:"512x512",type:"image/png",purpose:"any maskable"}
       ]
-    rl;
+    };
+    var blob=new Blob([JSON.stringify(manifest)],{type:"application/json"});
+    var url=URL.createObjectURL(blob);
+    var el=document.querySelector("link[rel='manifest']");
+    if(el)el.href=url;
   }catch(e){}
 })();</script>
 </body>
