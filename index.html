@@ -979,9 +979,6 @@ function App(){
                 h("span",{style:{fontSize:12,padding:"3px 8px",borderRadius:8,background:w.intensity==="High"?"#fff0ef":"#f2f2f7",color:w.intensity==="High"?"#ff3b30":"#636366",fontWeight:600}},w.intensity),
                 w.burn>0?h("span",{style:{fontSize:13,fontWeight:700,color:"#ff9500"}},"-"+w.burn+" kcal"):null)));})):
       h("div",null,
-        // Search
-        h("div",{style:{marginBottom:8}},
-          h("input",{value:logSearch,onChange:function(e){setLogSearch(e.target.value)},placeholder:"Search "+((SLOT_META[logSlot]||{}).label||"")+" items...",style:{width:"100%",padding:"10px 14px",borderRadius:12,border:"1px solid #e5e5ea",fontSize:14,background:"#fff",boxSizing:"border-box"}})),
         // Build unified sorted list: logged items first, then unlogged
         (function(){
           // Match helper: handles foodId vs id mismatch
