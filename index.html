@@ -480,14 +480,14 @@ function App(){
       SKIP_REASONS.map(function(r){return h("button",{key:r,onClick:function(){setSkipR(skipModal,r)},style:{display:"block",width:"100%",padding:16,borderRadius:12,border:"1px solid #e5e5ea",background:"#f9f9fb",fontSize:16,cursor:"pointer",textAlign:"left",marginBottom:8}},r)}))):null;
 
   /* -- Header -- */
-  var header=h("div",{style:{background:"#fff",padding:"12px 20px 10px",borderBottom:"1px solid rgba(0,0,0,0.06)"}},
+  var header=h("div",{style:{background:"#fff",padding:"14px 20px 12px",borderBottom:"1px solid rgba(0,0,0,0.06)"}},
     h("div",{style:{maxWidth:600,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center"}},
-      h("div",{style:{display:"flex",alignItems:"center",gap:12}},
-        NavIcon(40),
+      h("div",{style:{display:"flex",alignItems:"center",gap:14}},
+        NavIcon(72),
         h("div",null,
-          NavWordmark(19,"#1c1c1e"),
-          h("div",{style:{fontSize:11,color:"#8e8e93",marginTop:3,letterSpacing:"0.1px"}},"Target: "+calT+" kcal · Levo "+parseTime(settings.levoTime||"6:30 AM")))),
-      h("button",{onClick:function(){setSettingsOpen(true)},style:{background:"#f2f2f7",border:"none",color:"#2C6975",padding:"8px 12px",borderRadius:10,fontSize:20,cursor:"pointer",lineHeight:1}},"\u2699\uFE0F")));
+          NavWordmark(22,"#1c1c1e"),
+          h("div",{style:{fontSize:10,color:"#8e8e93",marginTop:4,letterSpacing:"3px",textTransform:"uppercase",fontWeight:500}},"TRACK \u00B7 TRANSFORM \u00B7 THRIVE"))),
+      h("button",{onClick:function(){setSettingsOpen(true)},style:{background:"#f2f2f7",border:"none",color:"#2C6975",padding:"10px 14px",borderRadius:12,fontSize:22,cursor:"pointer",lineHeight:1}},"\u2699\uFE0F")));
 
   /* -- Calendar Modal (shared: day picker + week picker) -- */
   function buildCalModal(){
@@ -953,17 +953,16 @@ function App(){
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}},
       h("span",{style:{fontSize:15,fontWeight:700,color:"#1c1c1e"}},"Log for "+selDate),
       h("div",{onClick:function(){setCalMode("day");setCalMonth(selDate.slice(0,7));setCalOpen(true)},style:{background:"#f2f2f7",padding:"6px 12px",borderRadius:10,cursor:"pointer",fontSize:13,fontWeight:600,color:"#2C6975"}},"Change date")),
-    // Slot pills - 2x5 wrap grid
-    h("div",{style:{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6,paddingBottom:12}},
+    // Slot pills - 4-col grid (3 rows for 10 slots), full labels
+    h("div",{style:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,paddingBottom:12}},
       allLogSlots.map(function(sl){
         var isSel=logSlot===sl;
         var meta=sl==="workout"?{label:"Workout",icon:"\uD83C\uDFCB\uFE0F"}:SLOT_META[sl];
         if(!meta) return null;
         var hasLogged=sl==="workout"?(dayWorkout!==null):(dayMeals[sl]||[]).length>0;
-        var shortLabel=sl==="workout"?"Workout":meta.label.length>7?meta.label.slice(0,6)+".":meta.label;
-        return h("button",{key:sl,onClick:function(){setLogSlot(sl);setLogSearch("");setLogSelected([])},style:{background:isSel?"#2C6975":hasLogged?"#e8f5ee":"#fff",color:isSel?"#fff":hasLogged?"#1c7c3a":"#3a3a3c",border:isSel?"none":"1px solid #e5e5ea",borderRadius:12,padding:"7px 2px",fontSize:10,fontWeight:isSel?700:500,cursor:"pointer",textAlign:"center",lineHeight:1.3,minWidth:0}},
-          h("div",{style:{fontSize:16}},meta.icon),
-          h("div",{style:{marginTop:2}},shortLabel+(hasLogged?" \u2713":"")));})),
+        return h("button",{key:sl,onClick:function(){setLogSlot(sl);setLogSearch("");setLogSelected([])},style:{background:isSel?"#2C6975":hasLogged?"#e8f5ee":"#fff",color:isSel?"#fff":hasLogged?"#1c7c3a":"#3a3a3c",border:isSel?"none":"1px solid #e5e5ea",borderRadius:12,padding:"10px 4px",fontSize:12,fontWeight:isSel?700:500,cursor:"pointer",textAlign:"center",lineHeight:1.3,minWidth:0}},
+          h("div",{style:{fontSize:20,marginBottom:2}},meta.icon),
+          h("div",null,meta.label+(hasLogged?" \u2713":"")));})),
     // Search bar (meals only)
     !isWoSlot?h("div",{style:{marginBottom:12}},
       h("input",{value:logSearch,onChange:function(e){setLogSearch(e.target.value)},placeholder:"Search "+((SLOT_META[logSlot]||{}).label||"")+" items...",style:{width:"100%",padding:"12px 16px",borderRadius:14,border:"1px solid #e5e5ea",fontSize:15,background:"#fff",boxSizing:"border-box"}})):null,
