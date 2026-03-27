@@ -13,7 +13,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="./icons/icon-80x80.png">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,'SF Pro Display','SF Pro Text','Segoe UI',system-ui,sans-serif;background:#f2f2f7;-webkit-font-smoothing:antialiased;font-size:17px}
+body{font-family:-apple-system,'SF Pro Display','SF Pro Text','Segoe UI',system-ui,sans-serif;background:#f0f4f3;-webkit-font-smoothing:antialiased;font-size:17px}
 input,select,button{font-family:inherit;font-size:17px}
 input[type=range]{-webkit-appearance:none;height:8px;border-radius:4px;background:#e5e5ea;outline:none}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#2C6975;cursor:pointer;box-shadow:0 2px 6px rgba(44,105,117,0.35)}
@@ -440,7 +440,7 @@ function App(){
 
   /* ========== SETUP SCREEN ========== */
   if(screen==="setup"){
-    return h("div",{style:{background:"#f2f2f7",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:24}},
+    return h("div",{style:{background:"#f0f4f3",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:24}},
       h("div",{style:{maxWidth:400,width:"100%"}},
         h("div",{style:{textAlign:"center",marginBottom:28}},
           h("div",{style:{marginBottom:16,display:"flex",justifyContent:"center"}},NavIcon(88)),
@@ -462,7 +462,7 @@ function App(){
           err?h("div",{style:{marginTop:14,padding:13,borderRadius:10,background:"#fff0ef",color:"#c0392b",fontSize:14,fontWeight:600}},err):null)));
   }
 
-  if(screen==="loading")return h("div",{style:{background:"#f2f2f7",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}},
+  if(screen==="loading")return h("div",{style:{background:"#f0f4f3",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}},
     h("div",{style:{textAlign:"center"}},
       h("div",{style:{marginBottom:14,display:"flex",justifyContent:"center"}},NavIcon(76)),
       h("div",{style:{marginBottom:6,display:"flex",justifyContent:"center"}},NavWordmark(24,"#1c1c1e")),
@@ -480,14 +480,14 @@ function App(){
       SKIP_REASONS.map(function(r){return h("button",{key:r,onClick:function(){setSkipR(skipModal,r)},style:{display:"block",width:"100%",padding:16,borderRadius:12,border:"1px solid #e5e5ea",background:"#f9f9fb",fontSize:16,cursor:"pointer",textAlign:"left",marginBottom:8}},r)}))):null;
 
   /* -- Header -- */
-  var header=h("div",{style:{background:"#fff",padding:"14px 18px 14px",borderBottom:"1px solid rgba(0,0,0,0.06)"}},
+  var header=h("div",{style:{background:"linear-gradient(135deg,#2C6975 0%,#1A4F5A 100%)",padding:"14px 18px 14px",borderBottom:"none"}},
     h("div",{style:{maxWidth:600,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:14}},
         NavIcon(80),
         h("div",{style:{display:"flex",flexDirection:"column",gap:4}},
-          NavWordmark(24,"#1c1c1e"),
-          h("div",{style:{fontSize:11,color:"#8e8e93",letterSpacing:"2.5px",textTransform:"uppercase",fontWeight:500,whiteSpace:"nowrap"}},"TRACK \u00B7 TRANSFORM \u00B7 THRIVE"))),
-      h("button",{onClick:function(){setSettingsOpen(true)},style:{background:"#f2f2f7",border:"none",color:"#2C6975",width:44,height:44,borderRadius:12,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}},"\u2699\uFE0F")));
+          NavWordmark(24,"#fff"),
+          h("div",{style:{fontSize:11,color:"rgba(255,255,255,0.45)",letterSpacing:"2.5px",textTransform:"uppercase",fontWeight:500,whiteSpace:"nowrap"}},"TRACK \u00B7 TRANSFORM \u00B7 THRIVE"))),
+      h("button",{onClick:function(){setSettingsOpen(true)},style:{background:"rgba(255,255,255,0.1)",border:"1px solid rgba(255,255,255,0.12)",color:"rgba(255,255,255,0.7)",width:44,height:44,borderRadius:12,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}},"\u2699\uFE0F")));
   /* -- Calendar Modal (shared: day picker + week picker) -- */
   function buildCalModal(){
     if(!calOpen)return null;
@@ -959,12 +959,12 @@ function App(){
         var meta=sl==="workout"?{label:"Workout",icon:"\uD83C\uDFCB\uFE0F"}:SLOT_META[sl];
         if(!meta) return null;
         var hasLogged=sl==="workout"?(dayWorkout!==null):(dayMeals[sl]||[]).length>0;
-        return h("button",{key:sl,onClick:function(){setLogSlot(sl);setLogSearch("");setLogSelected([])},style:{background:isSel?"#2C6975":hasLogged?"#e8f5ee":"#fff",color:isSel?"#fff":hasLogged?"#1c7c3a":"#3a3a3c",border:isSel?"none":"1px solid #e5e5ea",borderRadius:12,padding:"12px 6px",fontSize:13,fontWeight:isSel?700:500,cursor:"pointer",textAlign:"center",lineHeight:1.3,minWidth:0}},
+        return h("button",{key:sl,onClick:function(){setLogSlot(sl);setLogSearch("");setLogSelected([])},style:{background:isSel?"#2C6975":hasLogged?"#e8f5ee":"#f6faf9",color:isSel?"#fff":hasLogged?"#1c7c3a":"#2C6975",border:isSel?"none":"1px solid #d4e8e3",borderRadius:12,padding:"12px 6px",fontSize:13,fontWeight:isSel?700:500,cursor:"pointer",textAlign:"center",lineHeight:1.3,minWidth:0}},
           h("div",{style:{fontSize:24,marginBottom:3}},meta.icon),
           h("div",null,meta.label+(hasLogged?" \u2713":"")));})),
     // Search bar (meals only)
     !isWoSlot?h("div",{style:{marginBottom:12}},
-      h("input",{value:logSearch,onChange:function(e){setLogSearch(e.target.value)},placeholder:"Search "+((SLOT_META[logSlot]||{}).label||"")+" items...",style:{width:"100%",padding:"12px 16px",borderRadius:14,border:"1px solid #e5e5ea",fontSize:17,background:"#fff",boxSizing:"border-box"}})):null,
+      h("input",{value:logSearch,onChange:function(e){setLogSearch(e.target.value)},placeholder:"Search "+((SLOT_META[logSlot]||{}).label||"")+" items...",style:{width:"100%",padding:"12px 16px",borderRadius:14,border:"1.5px solid #d4e8e3",fontSize:17,background:"#f6faf9",boxSizing:"border-box"}})):null,
     // Items list
     isWoSlot?
       h("div",null,h("div",{style:{fontSize:13,fontWeight:600,color:"#8e8e93",marginBottom:10}},"Select workout:"),
@@ -1048,12 +1048,12 @@ function App(){
         h("div",{style:{marginTop:4}},
           h("button",{onClick:function(){setSkipModal(logSlot)},style:{width:"100%",padding:14,borderRadius:14,border:"1px dashed #d1d1d6",background:"#fafafa",color:"#8e8e93",fontSize:16,fontWeight:600,cursor:"pointer"}},"Skip this meal"))),
     // Sticky save bar (meals only)
-    !isWoSlot&&logSelected.length>0?h("div",{style:{position:"fixed",bottom:74,left:0,right:0,padding:"12px 18px",background:"rgba(255,255,255,0.95)",backdropFilter:"blur(10px)",borderTop:"1px solid rgba(0,0,0,0.08)",zIndex:40}},
+    !isWoSlot&&logSelected.length>0?h("div",{style:{position:"fixed",bottom:74,left:0,right:0,padding:"12px 18px",background:"linear-gradient(135deg,#2C6975,#50C878)",borderTop:"none",zIndex:40}},
       h("div",{style:{maxWidth:600,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}},
         h("div",null,
-          h("div",{style:{fontSize:17,fontWeight:700,color:"#1c1c1e"}},logSelected.length+" item"+(logSelected.length>1?"s":"")+" selected"),
-          h("div",{style:{fontSize:15,color:"#2C6975",fontWeight:600}},logSelTotal+" kcal total")),
-        h("button",{onClick:saveLogEntries,disabled:saving,style:{padding:"12px 24px",borderRadius:14,border:"none",background:saving?"#aeaeb2":"#2C6975",color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer"}},saving?"Saving...":loggedForSlot.length>0?"Update "+(SLOT_META[logSlot]||{}).label:"Save to "+(SLOT_META[logSlot]||{}).label))):null);
+          h("div",{style:{fontSize:17,fontWeight:700,color:"#fff"}},logSelected.length+" item"+(logSelected.length>1?"s":"")+" selected"),
+          h("div",{style:{fontSize:15,color:"rgba(255,255,255,0.8)",fontWeight:600}},logSelTotal+" kcal total")),
+        h("button",{onClick:saveLogEntries,disabled:saving,style:{padding:"12px 24px",borderRadius:14,border:"1px solid rgba(255,255,255,0.3)",background:"rgba(255,255,255,0.15)",color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer"}},saving?"Saving...":loggedForSlot.length>0?"Update "+(SLOT_META[logSlot]||{}).label:"Save to "+(SLOT_META[logSlot]||{}).label))):null);
 
   /* -- Today Tab: sorted logged/unlogged -- */
   var loggedSlots=SLOTS.filter(function(sl){return(dayMeals[sl]||[]).length>0});
@@ -1086,7 +1086,7 @@ function App(){
                 !isSkipped&&names?h("div",{style:{fontSize:14,color:"#636366",marginTop:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},names):null))));}),
       // Unlogged meals section
       unloggedSlots.length>0?h("div",{style:{padding:"0 18px 4px",marginTop:8}},
-        h("div",{style:{fontSize:14,fontWeight:600,color:"#ff9500",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:6}},"\u23F3 Not yet logged ("+unloggedSlots.length+")")):null,
+        h("div",{style:{fontSize:14,fontWeight:600,color:"#D4A853",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:6}},"\u23F3 Not yet logged ("+unloggedSlots.length+")")):null,
       unloggedSlots.map(function(slot){
         var meta=SLOT_META[slot];
         if(!meta) return null;
@@ -1097,7 +1097,7 @@ function App(){
               h("div",{style:{flex:1}},
                 h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
                   h("span",{style:{fontSize:16,fontWeight:500,color:"#8e8e93"}},meta.label+" \u00B7 "+meta.time),
-                  h("span",{style:{fontSize:14,color:"#ff9500",fontWeight:600}},"Log now"))))));}),
+                  h("span",{style:{fontSize:14,color:"#D4A853",fontWeight:600}},"Log now"))))));}),
       woCard,noEat,skipWarn,saveBtn));
 
   /* -- Bottom Tabs (4 tabs — Dashboard removed) -- */
@@ -1105,15 +1105,16 @@ function App(){
   var bottomBar=h("div",{style:{position:"fixed",bottom:0,left:0,right:0,background:"rgba(255,255,255,0.92)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:"1px solid rgba(0,0,0,0.08)",display:"flex",justifyContent:"space-around",padding:"8px 0 20px",zIndex:50}},
     tabs.map(function(t){
       var isSel=tab===t.k;
-      return h("button",{key:t.k,onClick:function(){setTab(t.k)},style:{background:"none",border:"none",cursor:"pointer",textAlign:"center",padding:"4px 16px",borderRadius:10,color:isSel?"#2C6975":"#8e8e93"}},
+      return h("button",{key:t.k,onClick:function(){setTab(t.k)},style:{background:"none",border:"none",cursor:"pointer",textAlign:"center",padding:"4px 16px",borderRadius:10,color:isSel?"#2C6975":"#8e8e93",position:"relative"}},
         h("div",{style:{fontSize:28}},t.ic),
-        h("div",{style:{fontSize:12,fontWeight:isSel?700:500,marginTop:3}},t.l))}));
+        h("div",{style:{fontSize:12,fontWeight:isSel?700:500,marginTop:3}},t.l),
+        isSel?h("div",{style:{width:20,height:3,borderRadius:1.5,background:"#2C6975",margin:"4px auto 0"}}):null)}));
 
   /* -- Content -- */
   var content=h("div",{style:{maxWidth:600,margin:"0 auto"}},
     tab==="log"?logTab:tab==="today"?todayTab:tab==="week"?weekTab:weightTab);
 
-  return h("div",{style:{paddingBottom:96,background:"#f2f2f7",minHeight:"100vh"}},toast,calModal,skipMod,settingsPanel,header,content,bottomBar);
+  return h("div",{style:{paddingBottom:96,background:"#f0f4f3",minHeight:"100vh"}},toast,calModal,skipMod,settingsPanel,header,content,bottomBar);
 }
 
 /* ===== RENDER ===== */
