@@ -50,7 +50,7 @@ var DAY_LABELS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Sat
 var SKIP={id:"skip",name:"Skip / NA",desc:"Skipping this meal",cal:0,p:0,c:0,f:0,isSkip:true};
 var SKIP_REASONS=["Not hungry","Nausea (Zepbound)","Fasting","Running late","Ate out","Other"];
 var MENU_MAP={bf:"bf",coffee:["cf","cf2"],main:["lu","dn"],snack:["ms","es"],protein:["lp","dp"]};
-var CACHE_VER="14";
+var CACHE_VER="15";
 
 /* ===== UTILITIES ===== */
 var LS={
@@ -406,11 +406,11 @@ function App(){
     var payload={action:"logFullDay",date:selDate,meals:meals,workout:dayWorkout?{workoutId:dayWorkout.id,workoutName:dayWorkout.name,duration:dayWorkout.dur,burn:dayWorkout.burn,intensity:dayWorkout.intensity}:null};
     apiPost(payload).then(function(r){
       if(r.success){
-        setMsg("Saved!");
+        setMsg("Saved!");setTimeout(function(){setMsg("")},3000);
         CACHE.clear("day-"+selDate);CACHE.clear("week-"+getMonday(selDate));
         prefetchedWeek=null;prefetchInFlight=null;
         prefetchWeek(selDate).then(function(){var fresh=CACHE.get("day-"+selDate);if(fresh)applyDayData(fresh)});
-      }else{setMsg("Error: "+(r.error||"Unknown"))}
+      }else{setMsg("Error: "+(r.error||"Unknown"));setTimeout(function(){setMsg("")},3000)}
       setSaving(false);setTimeout(function(){setMsg("")},3000);
     }).catch(function(){setMsg("Save failed");setSaving(false);setTimeout(function(){setMsg("")},3000)});
   }
@@ -419,8 +419,8 @@ function App(){
     setSaving(true);setMsg("");
     var data=Object.assign({action:"logWeight",date:todayStr()},wf);
     apiPost(data).then(function(r){
-      if(r.success){setMsg("Weight logged!");api("getWeightLog",{startDate:addDays(todayStr(),-90),endDate:todayStr()}).then(function(r2){if(r2.logs)setWeightHist(r2.logs)})}
-      else setMsg("Error: "+r.error);
+      if(r.success){setMsg("Weight logged!");setTimeout(function(){setMsg("")},3000);api("getWeightLog",{startDate:addDays(todayStr(),-90),endDate:todayStr()}).then(function(r2){if(r2.logs)setWeightHist(r2.logs)})}
+      else{setMsg("Error: "+r.error);setTimeout(function(){setMsg("")},3000)}
       setSaving(false);setTimeout(function(){setMsg("")},3000);
     }).catch(function(){setMsg("Save failed");setSaving(false);setTimeout(function(){setMsg("")},3000)});
   }
@@ -857,7 +857,7 @@ function App(){
             h("div",{style:{fontSize:15,fontWeight:700,color:"#fff"}},"Apple Health Sync"),
             h("div",{style:{fontSize:12,color:"rgba(255,255,255,0.8)",marginTop:2}},"Sync nutrition, weight & workouts"))),
         h("button",{onClick:function(){window.location.href="shortcuts://run-shortcut?name=Sync%20Diet%20to%20Health"},style:{width:"100%",padding:12,borderRadius:12,border:"2px solid rgba(255,255,255,0.35)",background:"rgba(255,255,255,0.15)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",marginBottom:8}},"Sync Today to Apple Health"),
-        h("button",{onClick:function(){api("getHealthExport",{date:todayStr()}).then(function(r){if(r.success){var n=r.nutrition;setMsg("Cal:"+n.calories+" P:"+n.protein+"g C:"+n.carbs+"g F:"+n.fat+"g")}else setMsg("Error")}).catch(function(){setMsg("Connection error")})},style:{width:"100%",padding:10,borderRadius:12,border:"1px solid rgba(255,255,255,0.3)",background:"transparent",color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer"}},"Preview Health Data")),
+        h("button",{onClick:function(){api("getHealthExport",{date:todayStr()}).then(function(r){if(r.success){var n=r.nutrition;setMsg("Cal:"+n.calories+" P:"+n.protein+"g C:"+n.carbs+"g F:"+n.fat+"g");setTimeout(function(){setMsg("")},5000)}else{setMsg("Error");setTimeout(function(){setMsg("")},3000)}}).catch(function(){setMsg("Connection error");setTimeout(function(){setMsg("")},3000)})},style:{width:"100%",padding:10,borderRadius:12,border:"1px solid rgba(255,255,255,0.3)",background:"transparent",color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer"}},"Preview Health Data")),
       h("div",{className:"card",style:{padding:"4px 0",marginBottom:12,overflow:"hidden"}},
         h("div",{style:{padding:"12px 16px 8px",borderBottom:"1px solid #f2f2f7"}},
           h("span",{style:{fontSize:13,fontWeight:600,color:"#8e8e93",textTransform:"uppercase",letterSpacing:"0.5px"}},"Security")),
